@@ -24,8 +24,9 @@ export function useAdmin() {
       } catch (error) {
         console.error('Error checking admin status:', error)
         setIsAdmin(false)
+      } finally {
+        setLoading(false)
       }
-      setLoading(false)
     }
 
     checkAdminStatus()

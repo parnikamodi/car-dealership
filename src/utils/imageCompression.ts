@@ -3,8 +3,8 @@ export async function compressImage(file: File): Promise<File> {
     const imageCompression = (await import('browser-image-compression')).default;
     
     const options = {
-      maxSizeMB: 1,          // Maximum size in MB
-      maxWidthOrHeight: 1920, // Max width/height of the output image
+      maxSizeMB: 0.5,          // Maximum size in MB
+      maxWidthOrHeight: 1080, // Max width/height of the output image
       useWebWorker: true,    // Use web workers for better performance
       initialQuality: 0.7,   // Initial quality of compression
     };
