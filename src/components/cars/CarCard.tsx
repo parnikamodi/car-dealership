@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/hooks/useAuth'
+import { useAdmin } from '@/hooks/useAdmin'
 import { storage } from '@/lib/firebase/config'
 import { ref, getDownloadURL } from 'firebase/storage'
 import type { Car } from '@/lib/types/car'
@@ -15,6 +16,7 @@ interface CarCardProps {
 
 export default function CarCard({ car, onDelete }: CarCardProps) {
   const { user } = useAuth()
+  const { isAdmin } = useAdmin()
   const [imgUrl, setImgUrl] = useState("")
 
   useEffect(() => {
@@ -92,7 +94,7 @@ export default function CarCard({ car, onDelete }: CarCardProps) {
         >
           VIEW DETAILS
         </Link>
-        {user?.uid === car.uid && (
+        {isAdmin && (
           <button
             onClick={onDelete}
             className="text-red-600 font-medium text-sm hover:text-red-800 ml-auto"

@@ -3,14 +3,13 @@
 @tailwind utilities;
 
 @layer components {
-  .carCard img {
-    @apply p-2 w-[280px] self-center min-w-[180px] min-h-[180px] max-h-[180px] object-cover;
-  }
-
   .carCard {
-    @apply bg-amber-50 w-[300px] h-full flex flex-col m-1 border-2 border-black p-1;
+    @apply bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300;
   }
 
+  .carCard img {
+    @apply w-full h-48 object-cover rounded-t-lg;
+  }
   .carCardContainer {
     @apply flex flex-wrap;
   }

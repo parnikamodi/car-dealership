@@ -20,7 +20,7 @@ export default function CarForm() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
   const [loading, setLoading] = useState(false)
-  const [imageUpload, setImageUpload] = useState<File | null>(null)
+  const [imageUpload, setImageUpload] = useState<File[]>([])
   const [formData, setFormData] = useState<CarFormData>({
     name: '',
     year: new Date().getFullYear(),
@@ -28,7 +28,17 @@ export default function CarForm() {
     price: 0,
     tel: '',
     featured: false
+    
   })
+  /*
+  useEffect(() => {
+    if (user) {
+      console.log("Your Admin Details:", {
+        uid: user.uid,
+        email: user.email
+      });
+    }
+  }, [user]);*/
 
   useEffect(() => {
     if (!authLoading && !user) {
