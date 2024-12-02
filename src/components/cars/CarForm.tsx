@@ -3,11 +3,19 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { storage, db } from '@/lib/firebase/config'
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
+import { ref, uploadBytes } from 'firebase/storage'
 import { collection, addDoc } from 'firebase/firestore'
 import { useRouter } from 'next/navigation'
+import { compressImage } from '@/utils/imageCompression'
 
-interface CarFormData {
+interface ImageUploadState {
+  file: File;
+  preview?: string;
+  uploading: boolean;
+  error?: string;
+}
+
+interface FormData {
   name: string;
   year: number;
   info: string;
@@ -20,25 +28,16 @@ export default function CarForm() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
   const [loading, setLoading] = useState(false)
-  const [imageUpload, setImageUpload] = useState<File[]>([])
-  const [formData, setFormData] = useState<CarFormData>({
+  const [imageUploads, setImageUploads] = useState<ImageUploadState[]>([])
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const [formData, setFormData] = useState<FormData>({
     name: '',
     year: new Date().getFullYear(),
     info: '',
     price: 0,
     tel: '',
     featured: false
-    
   })
-  /*
-  useEffect(() => {
-    if (user) {
-      console.log("Your Admin Details:", {
-        uid: user.uid,
-        email: user.email
-      });
-    }
-  }, [user]);*/
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -46,54 +45,85 @@ export default function CarForm() {
     }
   }, [user, authLoading, router])
 
-  if (authLoading) {
-    return <div className="max-w-2xl mx-auto p-4">Loading...</div>
-  }
+  useEffect(() => {
+    return () => {
+      imageUploads.forEach(upload => {
+        if (upload.preview) {
+          URL.revokeObjectURL(upload.preview)
+        }
+      })
+    }
+  }, [imageUploads])
 
-  if (!authLoading && !user) {
-    return null
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files?.length) return
+
+    const newFiles = Array.from(e.target.files)
+    const existingCount = imageUploads.length
+    const totalAllowed = 50
+    const remainingSlots = totalAllowed - existingCount
+
+    if (newFiles.length > remainingSlots) {
+      alert(`You can only add ${remainingSlots} more images. Maximum 50 images allowed.`)
+      return
+    }
+
+    setUploadProgress(0)
+    const totalFiles = newFiles.length
+    let processedFiles = 0
+
+    const compressedImages: ImageUploadState[] = []
+    
+    for (const file of newFiles) {
+      try {
+        const compressedFile = await compressImage(file)
+        compressedImages.push({
+          file: compressedFile,
+          preview: URL.createObjectURL(compressedFile),
+          uploading: false
+        })
+        processedFiles++
+        setUploadProgress((processedFiles / totalFiles) * 100)
+      } catch (error) {
+        console.error(`Error processing image ${file.name}:`, error)
+      }
+    }
+
+    setImageUploads(prev => [...prev, ...compressedImages])
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log("Starting form submission...")
-
-    if (!imageUpload || loading || !user) {
-      console.log("Validation failed:", { imageUpload: !!imageUpload, loading, user: !!user })
-      alert('Please ensure all fields are filled and you are logged in')
+    
+    if (imageUploads.length === 0 || loading || !user) {
+      alert('Please add at least one image and ensure you are logged in')
       return
     }
 
     try {
       setLoading(true)
-      console.log("Selected file:", imageUpload.name, "Type:", imageUpload.type)
+      setUploadProgress(0)
+      const totalUploads = imageUploads.length
+      let completedUploads = 0
 
-      // 1. Create a safe filename
-      const timestamp = Date.now()
-      const fileExtension = imageUpload.name.split('.').pop()
-      const safeFileName = `${timestamp}.${fileExtension}`
-      const filePath = `images/${user.uid}/${safeFileName}`
+      const imagePaths = await Promise.all(
+        imageUploads.map(async (upload, index) => {
+          const timestamp = Date.now()
+          const randomId = Math.random().toString(36).substring(7)
+          const fileExtension = upload.file.name.split('.').pop()
+          const safeFileName = `${timestamp}_${randomId}_${index}.${fileExtension}`
+          const filePath = `images/${user.uid}/${safeFileName}`
+          
+          const storageRef = ref(storage, filePath)
+          await uploadBytes(storageRef, upload.file)
+          
+          completedUploads++
+          setUploadProgress((completedUploads / totalUploads) * 100)
+          
+          return filePath
+        })
+      )
 
-      console.log("Generated file path:", filePath)
-
-      // 2. Create storage reference
-      const storageRef = ref(storage, filePath)
-      console.log("Storage reference created")
-
-      // 3. Upload with metadata
-      console.log("Starting upload...")
-      const metadata = {
-        contentType: imageUpload.type
-      }
-      const uploadResult = await uploadBytes(storageRef, imageUpload, metadata)
-      console.log("Upload completed:", uploadResult)
-
-      // 4. Get download URL
-      console.log("Getting download URL...")
-      const downloadURL = await getDownloadURL(uploadResult.ref)
-      console.log("Got download URL:", downloadURL)
-
-      // 5. Create Firestore document
       const carData = {
         name: formData.name,
         year: Number(formData.year),
@@ -103,36 +133,23 @@ export default function CarForm() {
         featured: formData.featured,
         uid: user.uid,
         email: user.email,
-        imageUrl: downloadURL,
-        imagePath: filePath,
-        posted: new Date().toLocaleDateString('en-GB', {
-          day: 'numeric',
-          month: 'long',
-          year: 'numeric'
-        }),
+        imagePaths: imagePaths,
+        posted: new Date().toLocaleDateString('en-GB'),
         views: 0,
         status: 'Live',
         createdAt: new Date().toISOString()
       }
 
-      console.log("Saving to Firestore:", carData)
-      const docRef = await addDoc(collection(db, "cars"), carData)
-      console.log("Document created with ID:", docRef.id)
-
+      await addDoc(collection(db, "cars"), carData)
       alert('Advertisement created successfully!')
       router.push('/')
 
     } catch (error) {
-      console.error("Full error object:", error)
-      if (error instanceof Error) {
-        console.error("Error name:", error.name)
-        console.error("Error message:", error.message)
-        console.error("Error stack:", error.stack)
-      }
-      setLoading(false)
+      console.error("Error:", error)
       alert(`Error creating listing: ${error instanceof Error ? error.message : 'Unknown error'}`)
     } finally {
       setLoading(false)
+      setUploadProgress(0)
     }
   }
 
@@ -141,6 +158,41 @@ export default function CarForm() {
       <h1 className="text-2xl font-bold mb-6">Create New Listing</h1>
       
       <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium mb-1">Car Images (Up to 50)*</label>
+          <input
+            type="file"
+            multiple
+            accept="image/*"
+            onChange={handleImageSelect}
+            className="w-full p-2 border rounded"
+          />
+          {uploadProgress > 0 && (
+            <div className="mt-2">
+              <div className="h-2 bg-gray-200 rounded">
+                <div 
+                  className="h-2 bg-blue-500 rounded transition-all"
+                  style={{ width: `${uploadProgress}%` }}
+                ></div>
+              </div>
+              <p className="text-sm text-gray-600 mt-1">Processing: {Math.round(uploadProgress)}%</p>
+            </div>
+          )}
+          <div className="mt-2 grid grid-cols-4 gap-2">
+            {imageUploads.map((upload, index) => (
+              <div key={index} className="relative">
+                {upload.preview && (
+                  <img 
+                    src={upload.preview} 
+                    alt={`Preview ${index + 1}`}
+                    className="w-full h-24 object-cover rounded"
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
         <div>
           <label className="block text-sm font-medium mb-1">Car Model & Variant*</label>
           <input
@@ -200,19 +252,6 @@ export default function CarForm() {
             className="w-full p-2 border rounded"
             value={formData.tel}
             onChange={(e) => setFormData(prev => ({ ...prev, tel: e.target.value }))}
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-1">Car Image*</label>
-          <input
-            type="file"
-            required
-            accept="image/*"
-            onChange={(e) => setImageUpload(e.target.files?.[0] || null)}
-            className="w-full p-2 border rounded file:mr-4 file:py-2 file:px-4 
-                     file:rounded file:border-0 file:bg-blue-500 file:text-white
-                     hover:file:bg-blue-600"
           />
         </div>
 
