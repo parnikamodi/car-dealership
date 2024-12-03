@@ -8,7 +8,6 @@ import {
   signInWithEmailAndPassword,
   GoogleAuthProvider,
   signInWithPopup,
-  AuthError
 } from 'firebase/auth'
 
 export default function LoginForm() {
