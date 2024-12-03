@@ -13,6 +13,7 @@ export default function CarList() {
   const [sortOrder, setSortOrder] = useState<'none' | 'high' | 'low'>('none')
   const [error, setError] = useState<string | null>(null)
 
+  // Fetch cars
   useEffect(() => {
     const fetchCars = async () => {
       setLoading(true)
@@ -40,14 +41,17 @@ export default function CarList() {
     fetchCars()
   }, [])
 
+  // Handle car deletion
   const handleDelete = async (carId: string) => {
     if (!window.confirm('Are you sure you want to delete this listing?')) return
 
     try {
+      // Fetch car data to delete associated images
       const carDoc = await getDoc(doc(db, 'cars', carId))
       const carData = carDoc.data()
 
       if (carData?.imagePaths) {
+        // Delete images from storage
         await Promise.all(
           carData.imagePaths.map(async (path: string) => {
             const imageRef = ref(storage, path)
@@ -56,6 +60,7 @@ export default function CarList() {
         )
       }
 
+      // Delete document from Firestore
       await deleteDoc(doc(db, 'cars', carId))
       setCars(prevCars => prevCars.filter(car => car.id !== carId))
     } catch (error) {
@@ -64,6 +69,7 @@ export default function CarList() {
     }
   }
 
+  // Sort cars based on price
   const sortedCars = [...cars].sort((a, b) => {
     if (sortOrder === 'high') {
       return b.price - a.price
@@ -75,11 +81,11 @@ export default function CarList() {
 
   if (loading) {
     return (
-      <div className="animate-pulse space-y-4">
-        {[1, 2, 3].map(n => (
-          <div key={n} className="bg-white p-4 border-b border-gray-200">
-            <div className="h-4 bg-gray-200 rounded w-1/4 mb-3"></div>
-            <div className="h-6 bg-gray-200 rounded w-3/4 mb-2"></div>
+      <div className="flex flex-col space-y-4 max-w-2xl mx-auto">
+        {[1, 2, 3].map(i => (
+          <div key={i} className="bg-white rounded-lg shadow-sm p-4 animate-pulse">
+            <div className="h-48 bg-gray-200 rounded-lg mb-4"></div>
+            <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
             <div className="h-4 bg-gray-200 rounded w-1/2"></div>
           </div>
         ))}
@@ -89,58 +95,59 @@ export default function CarList() {
 
   if (error) {
     return (
-      <div className="text-center py-8">
-        <p className="text-red-600">{error}</p>
+      <div className="bg-white rounded-lg shadow-sm p-6 text-center max-w-2xl mx-auto">
+        <p className="text-red-600 mb-2">{error}</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="text-blue-600 hover:text-blue-800"
+        >
+          Try Again
+        </button>
       </div>
     )
   }
 
   if (cars.length === 0) {
     return (
-      <div className="text-center py-8">
+      <div className="text-center py-8 max-w-2xl mx-auto">
         <p className="text-gray-600">No cars available at the moment.</p>
-        <p className="text-sm text-gray-500 mt-2">Please check back later for new listings.</p>
+        <p className="text-sm text-gray-500 mt-2">
+          Please check back later for new listings.
+        </p>
       </div>
     )
   }
 
   return (
-    <div>
-      {/* Filter and Sort Options */}
-      <div className="mb-6 flex gap-4 justify-between items-center">
-        <div className="text-sm text-gray-600">Result: {cars.length} ad(s)</div>
-        <div className="flex gap-4">
-          <button
-            onClick={() => setSortOrder('high')}
-            className={`px-4 py-2 rounded transition ${
-              sortOrder === 'high'
-                ? 'bg-black text-white'
-                : 'bg-gray-200 hover:bg-gray-300'
-            }`}
-          >
-            Highest Price
-          </button>
-          <button
-            onClick={() => setSortOrder('low')}
-            className={`px-4 py-2 rounded transition ${
-              sortOrder === 'low'
-                ? 'bg-black text-white'
-                : 'bg-gray-200 hover:bg-gray-300'
-            }`}
-          >
-            Lowest Price
-          </button>
-        </div>
+    <div className="max-w-2xl mx-auto">
+      {/* Filter buttons */}
+      <div className="mb-6 flex gap-4">
+        <button
+          onClick={() => setSortOrder('high')}
+          className={`px-4 py-2 rounded transition ${
+            sortOrder === 'high'
+              ? 'bg-black text-white'
+              : 'bg-gray-200 hover:bg-gray-300'
+          }`}
+        >
+          Highest Price
+        </button>
+        <button
+          onClick={() => setSortOrder('low')}
+          className={`px-4 py-2 rounded transition ${
+            sortOrder === 'low'
+              ? 'bg-black text-white'
+              : 'bg-gray-200 hover:bg-gray-300'
+          }`}
+        >
+          Lowest Price
+        </button>
       </div>
 
-      {/* Car Listings */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Car listings */}
+      <div className="flex flex-col space-y-4">
         {sortedCars.map(car => (
-          <CarCard 
-            key={car.id} 
-            car={car} 
-            onDelete={() => handleDelete(car.id)} 
-          />
+          <CarCard key={car.id} car={car} onDelete={() => handleDelete(car.id)} />
         ))}
       </div>
     </div>

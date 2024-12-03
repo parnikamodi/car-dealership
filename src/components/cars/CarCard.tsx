@@ -64,9 +64,9 @@ export default function CarCard({ car, onDelete, isAdminPage }: CarCardProps) {
 
  return (
    <div className="bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
-     {/* Image Section */}
+     {/* Image Section - Increased height from h-48 to h-72 */}
      <div
-       className="relative h-48"
+       className="relative h-72"
        onMouseEnter={() => setIsHovered(true)}
        onMouseLeave={() => setIsHovered(false)}
      >
@@ -74,80 +74,80 @@ export default function CarCard({ car, onDelete, isAdminPage }: CarCardProps) {
          <img
            src={imgUrls[currentImageIndex]}
            alt={car.name}
-           className="w-full h-48 object-cover rounded-t-lg"
+           className="w-full h-72 object-cover rounded-t-lg"
          />
        ) : (
-         <div className="w-full h-48 bg-gray-200 rounded-t-lg" />
+         <div className="w-full h-72 bg-gray-200 rounded-t-lg" />
        )}
 
-       {/* Navigation Arrows */}
+       {/* Navigation Arrows - Adjusted positioning */}
        {isHovered && imgUrls.length > 1 && (
          <>
            <button
              onClick={previousImage}
-             className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 p-1 rounded-full hover:bg-black/70"
+             className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 p-2 rounded-full hover:bg-black/70"
            >
-             <ChevronLeftIcon className="h-6 w-6 text-white" />
+             <ChevronLeftIcon className="h-8 w-8 text-white" />
            </button>
            <button
              onClick={nextImage}
-             className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 p-1 rounded-full hover:bg-black/70"
+             className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 p-2 rounded-full hover:bg-black/70"
            >
-             <ChevronRightIcon className="h-6 w-6 text-white" />
+             <ChevronRightIcon className="h-8 w-8 text-white" />
            </button>
          </>
        )}
 
-       {/* Image Counter */}
+       {/* Image Counter - Increased padding and text size */}
        {imgUrls.length > 1 && (
-         <div className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
+         <div className="absolute bottom-4 right-4 bg-black/70 text-white text-sm px-3 py-1.5 rounded">
            {currentImageIndex + 1} / {imgUrls.length}
          </div>
        )}
 
-       {/* Views Counter */}
-       <div className="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded flex items-center gap-1">
-         <EyeIcon className="w-3 h-3" />
+       {/* Views Counter - Adjusted size and position */}
+       <div className="absolute top-4 right-4 bg-black/70 text-white text-sm px-3 py-1.5 rounded flex items-center gap-2">
+         <EyeIcon className="w-4 h-4" />
          <span>{car.views || 0}</span>
        </div>
      </div>
 
-     {/* Car Details */}
-     <div className="p-4">
-       <div className="flex items-center gap-2 mb-2">
-         <div className="bg-blue-500 text-white text-xs px-2 py-1 rounded">
+     {/* Car Details - Increased padding and spacing */}
+     <div className="p-6">
+       <div className="flex items-center gap-3 mb-3">
+         <div className="bg-blue-500 text-white text-sm px-3 py-1.5 rounded">
            {car.status || 'Live'}
          </div>
          {car.featured && (
-           <div className="bg-gray-800 text-white text-xs px-2 py-1 rounded">
+           <div className="bg-gray-800 text-white text-sm px-3 py-1.5 rounded">
              FEATURED
            </div>
          )}
        </div>
 
-       <h2 className="font-medium text-lg mb-1">{car.name}</h2>
-       <div className="text-gray-600 text-sm mb-2">
+       <h2 className="font-medium text-xl mb-2">{car.name}</h2>
+       <div className="text-gray-600 text-base mb-3">
          {car.year} | {car.info}
        </div>
 
-       <div className="space-y-1 text-sm text-gray-600">
+       <div className="space-y-2 text-base text-gray-600">
          <div>Ad Id: {car.id}</div>
          <div>Posted: {car.posted}</div>
          <div>Price: {formatPrice(car.price)}</div>
          <div>Location: {car.tel}</div>
        </div>
 
-       <div className="mt-4 flex gap-2">
+       <div className="mt-6 flex gap-3">
          <Link 
            href={`/ad/${car.id}`}
-           className="text-blue-600 font-medium text-sm hover:text-blue-800"
+           className="text-blue-600 font-medium text-base hover:text-blue-800"
          >
            VIEW DETAILS
          </Link>
          {isAdmin && isAdminPage && (
            <button 
              onClick={onDelete} 
-             className="text-red-600 font-medium text-sm hover:text-red-800 ml-auto"
+             className="text-red-600 font-medium text-base hover:text-red-800 ml-auto"
            >
              DELETE
            </button>
