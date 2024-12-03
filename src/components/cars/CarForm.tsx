@@ -7,6 +7,7 @@ import { ref, uploadBytes } from 'firebase/storage'
 import { collection, addDoc } from 'firebase/firestore'
 import { useRouter } from 'next/navigation'
 import { compressImage } from '@/utils/imageCompression'
+import Image from 'next/image'
 
 interface ImageUploadState {
   file: File;
@@ -180,12 +181,14 @@ export default function CarForm() {
           )}
           <div className="mt-2 grid grid-cols-4 gap-2">
             {imageUploads.map((upload, index) => (
-              <div key={index} className="relative">
+              <div key={index} className="relative w-full h-24">
                 {upload.preview && (
-                  <img 
-                    src={upload.preview} 
+                  <Image
+                    src={upload.preview}
                     alt={`Preview ${index + 1}`}
-                    className="w-full h-24 object-cover rounded"
+                    fill
+                    className="object-cover rounded"
+                    sizes="(max-width: 768px) 25vw, 20vw"
                   />
                 )}
               </div>
