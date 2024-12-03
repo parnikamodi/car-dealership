@@ -3,13 +3,17 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { auth } from '@/lib/firebase/config'
-
 import { 
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   GoogleAuthProvider,
-  signInWithPopup3
+  signInWithPopup
 } from 'firebase/auth'
+
+interface FirebaseError {
+  code?: string;
+  message: string;
+}
 
 export default function LoginForm() {
   const router = useRouter()
@@ -49,8 +53,9 @@ export default function LoginForm() {
         )
       }
       router.push('/')
-    } catch (error: any) {
-      setError(error.message)
+    } catch (error) {
+      const firebaseError = error as FirebaseError
+      setError(firebaseError.message)
     } finally {
       setIsLoading(false)
     }
@@ -61,8 +66,9 @@ export default function LoginForm() {
       const provider = new GoogleAuthProvider()
       await signInWithPopup(auth, provider)
       router.push('/')
-    } catch (error: any) {
-      setError(error.message)
+    } catch (error) {
+      const firebaseError = error as FirebaseError
+      setError(firebaseError.message)
     }
   }
 
@@ -118,7 +124,7 @@ export default function LoginForm() {
           onClick={() => setIsRegister(!isRegister)}
           className="text-amber-600 hover:text-amber-700"
         >
-          {isRegister ? 'Already have an account? Login' : "Don't have an account? Register"}
+          {isRegister ? 'Already have an account? Login' : "Don&apos;t have an account? Register"}
         </button>
       </div>
 

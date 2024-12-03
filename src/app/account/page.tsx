@@ -94,7 +94,7 @@ export default function AccountPage() {
           
           {userListings.length === 0 ? (
             <p className="text-gray-600 text-center py-4">
-              You haven't created any listings yet.
+              You haven&apos;t created any listings yet.
             </p>
           ) : (
             <div className="space-y-4">
@@ -105,7 +105,7 @@ export default function AccountPage() {
                 >
                   <div>
                     <h3 className="font-medium">{listing.name}</h3>
-                    <p className="text-sm text-gray-600">€{listing.price.toLocaleString()}</p>
+                    <p className="text-sm text-gray-600">₹{listing.price.toLocaleString()}</p>
                   </div>
                   <div className="text-sm text-gray-500">
                     Added: {listing.year}
