@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useAuth } from '@/hooks/useAuth'
 import { useAdmin } from '@/hooks/useAdmin'
 import { storage } from '@/lib/firebase/config'
 import { ref, getDownloadURL } from 'firebase/storage'

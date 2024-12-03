@@ -7,13 +7,9 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   GoogleAuthProvider,
-  signInWithPopup
+  signInWithPopup,
+  AuthError
 } from 'firebase/auth'
-
-interface FirebaseError {
-  code?: string;
-  message: string;
-}
 
 export default function LoginForm() {
   const router = useRouter()
@@ -53,9 +49,12 @@ export default function LoginForm() {
         )
       }
       router.push('/')
-    } catch (error) {
-      const firebaseError = error as FirebaseError
-      setError(firebaseError.message)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setError(error.message)
+      } else {
+        setError('An error occurred during authentication')
+      }
     } finally {
       setIsLoading(false)
     }
@@ -66,9 +65,12 @@ export default function LoginForm() {
       const provider = new GoogleAuthProvider()
       await signInWithPopup(auth, provider)
       router.push('/')
-    } catch (error) {
-      const firebaseError = error as FirebaseError
-      setError(firebaseError.message)
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setError(error.message)
+      } else {
+        setError('An error occurred during Google sign-in')
+      }
     }
   }
 
