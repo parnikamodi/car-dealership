@@ -25,7 +25,6 @@ if (!getApps().length) {
     // Initialize Firestore with settings to prevent connection issues
     db = initializeFirestore(app, {
       experimentalForceLongPolling: true,
-      useFetchStreams: false
     });
   } catch (error) {
     console.error("Firebase initialization error:", error);
