@@ -1,6 +1,6 @@
 'use client'
 
-import CarList, { CarListProps } from '@/components/cars/CarList'
+import CarList from '@/components/cars/CarList'
 import { useState } from 'react'
 
 export default function Home() {
