@@ -7,7 +7,8 @@ export interface Car {
   info: string;
   tel: string;
   email: string;
-  imagePath: string[];
+  imagePath?:string;
+  imagePaths?: string[];
   featured: boolean;
   status: string;
   views: number;
