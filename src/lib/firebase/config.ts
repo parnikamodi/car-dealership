@@ -1,7 +1,7 @@
-import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import { getFirestore, initializeFirestore } from 'firebase/firestore';
-import { getStorage } from 'firebase/storage';
+import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
+import { getAuth, Auth } from 'firebase/auth';
+import { getFirestore, initializeFirestore, Firestore } from 'firebase/firestore';
+import { getStorage, FirebaseStorage } from 'firebase/storage';
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -15,8 +15,8 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-let app;
-let db;
+let app: FirebaseApp;
+let db: Firestore;
 
 // Check if Firebase is already initialized
 if (!getApps().length) {
@@ -29,6 +29,7 @@ if (!getApps().length) {
     });
   } catch (error) {
     console.error("Firebase initialization error:", error);
+    throw new Error("Failed to initialize Firebase");
   }
 } else {
   app = getApp();
@@ -36,8 +37,8 @@ if (!getApps().length) {
 }
 
 // Initialize other Firebase services
-const auth = getAuth(app);
-const storage = getStorage(app);
+const auth: Auth = getAuth(app);
+const storage: FirebaseStorage = getStorage(app);
 
 // Log initialization status (remove in production)
 console.log("Firebase initialized successfully");
