@@ -7,7 +7,11 @@ import { db, storage } from '@/lib/firebase/config'
 import CarCard from './CarCard'
 import type { Car } from '@/lib/types/car'
 
-export default function CarList() {
+interface CarListProps {
+  isAdminPage?: boolean;
+}
+
+export default function CarList({ isAdminPage = false }: CarListProps) {
   const [cars, setCars] = useState<Car[]>([])
   const [loading, setLoading] = useState(true)
   const [sortOrder, setSortOrder] = useState<'none' | 'high' | 'low'>('none')
@@ -147,7 +151,12 @@ export default function CarList() {
       {/* Car listings */}
       <div className="flex flex-col space-y-4">
         {sortedCars.map(car => (
-          <CarCard key={car.id} car={car} onDelete={() => handleDelete(car.id)} />
+          <CarCard 
+            key={car.id} 
+            car={car} 
+            onDelete={() => handleDelete(car.id)} 
+            isAdminPage={isAdminPage}
+          />
         ))}
       </div>
     </div>
