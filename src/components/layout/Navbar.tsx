@@ -10,11 +10,11 @@ import { useState, useRef, useEffect } from 'react'
 export default function Navbar() {
   const { user } = useAuth()
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
-  const dropdownRef = useRef(null)
+  const dropdownRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
-    function handleClickOutside(event) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsSettingsOpen(false)
       }
     }
