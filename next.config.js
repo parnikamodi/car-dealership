@@ -9,7 +9,9 @@ const nextConfig = {
     ]
   },
   reactStrictMode: true,
-  poweredByHeader: false
+  poweredByHeader: false,
+  // Add this configuration
+  output: 'standalone'
 }
 
 module.exports = nextConfig
