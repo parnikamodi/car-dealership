@@ -1,17 +1,18 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { collection, getDocs, query, orderBy, deleteDoc, doc, getDoc } from 'firebase/firestore'
+import { collection, getDocs, query, orderBy, deleteDoc, doc, getDoc, where, Query } from 'firebase/firestore'
 import { ref, deleteObject } from 'firebase/storage'
 import { db, storage } from '@/lib/firebase/config'
 import CarCard from './CarCard'
 import type { Car } from '@/lib/types/car'
 
-interface CarListProps {
+export interface CarListProps {
   isAdminPage?: boolean;
+  filter?: string;
 }
 
-export default function CarList({ isAdminPage = false }: CarListProps) {
+export default function CarList({ isAdminPage = false, filter = 'all' }: CarListProps) {
   const [cars, setCars] = useState<Car[]>([])
   const [loading, setLoading] = useState(true)
   const [sortOrder, setSortOrder] = useState<'none' | 'high' | 'low'>('none')
@@ -25,9 +26,17 @@ export default function CarList({ isAdminPage = false }: CarListProps) {
 
       try {
         const carsRef = collection(db, 'cars')
-        const q = query(carsRef, orderBy('createdAt', 'desc'))
-        const querySnapshot = await getDocs(q)
+        let q: Query = query(carsRef, orderBy('createdAt', 'desc'))
 
+        // Apply filter if not 'all'
+        if (filter !== 'all') {
+          q = query(carsRef, 
+            where('status', '==', filter),
+            orderBy('createdAt', 'desc')
+          )
+        }
+
+        const querySnapshot = await getDocs(q)
         const carsData = querySnapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data(),
@@ -43,7 +52,7 @@ export default function CarList({ isAdminPage = false }: CarListProps) {
     }
 
     fetchCars()
-  }, [])
+  }, [filter]) // Added filter to dependency array
 
   // Handle car deletion
   const handleDelete = async (carId: string) => {
@@ -116,7 +125,9 @@ export default function CarList({ isAdminPage = false }: CarListProps) {
       <div className="text-center py-8 max-w-2xl mx-auto">
         <p className="text-gray-600">No cars available at the moment.</p>
         <p className="text-sm text-gray-500 mt-2">
-          Please check back later for new listings.
+          {filter !== 'all' 
+            ? `No cars found with status "${filter}". Try a different filter.`
+            : 'Please check back later for new listings.'}
         </p>
       </div>
     )
@@ -124,10 +135,10 @@ export default function CarList({ isAdminPage = false }: CarListProps) {
 
   return (
     <div className="max-w-2xl mx-auto">
-      {/* Filter buttons */}
-      <div className="mb-6 flex gap-4">
+      {/* Sort buttons */}
+      <div className="mb-6 flex gap-4 justify-end">
         <button
-          onClick={() => setSortOrder('high')}
+          onClick={() => setSortOrder(current => current === 'high' ? 'none' : 'high')}
           className={`px-4 py-2 rounded transition ${
             sortOrder === 'high'
               ? 'bg-black text-white'
@@ -137,7 +148,7 @@ export default function CarList({ isAdminPage = false }: CarListProps) {
           Highest Price
         </button>
         <button
-          onClick={() => setSortOrder('low')}
+          onClick={() => setSortOrder(current => current === 'low' ? 'none' : 'low')}
           className={`px-4 py-2 rounded transition ${
             sortOrder === 'low'
               ? 'bg-black text-white'
