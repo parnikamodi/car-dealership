@@ -9,12 +9,22 @@ export function useAuth() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user)
-      setLoading(false)
-    })
+    // Check if running on client side
+    if (typeof window !== 'undefined') {
+      const unsubscribe = onAuthStateChanged(auth, (user) => {
+        setUser(user)
+        setLoading(false)
+      }, (error) => {
+        console.error('Auth state change error:', error)
+        setUser(null)
+        setLoading(false)
+      })
 
-    return () => unsubscribe()
+      return () => unsubscribe()
+    } else {
+      // If on server side, set loading to false
+      setLoading(false)
+    }
   }, [])
 
   return { user, loading }
