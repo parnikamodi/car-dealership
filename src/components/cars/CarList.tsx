@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { collection, getDocs, query, orderBy, deleteDoc, doc, getDoc, where, Query } from 'firebase/firestore'
+import { collection, getDocs, query, orderBy, deleteDoc, doc, where } from 'firebase/firestore'
 import { ref, deleteObject } from 'firebase/storage'
 import { db, storage } from '@/lib/firebase/config'
 import CarCard from './CarCard'
@@ -28,7 +28,7 @@ export default function CarList({ isAdminPage = false, filter = 'all' }: CarList
 
       try {
         const carsRef = collection(db, 'cars')
-        let q: Query = query(carsRef, orderBy('createdAt', 'desc'))
+        let q = query(carsRef, orderBy('createdAt', 'desc'))
 
         // Apply filter if not 'all'
         if (filter !== 'all') {
@@ -57,34 +57,30 @@ export default function CarList({ isAdminPage = false, filter = 'all' }: CarList
   }, [filter])
 
   // Handle car deletion
-  const handleDelete = async (car: Car) => {
-    if (!window.confirm('Are you sure you want to delete this listing?')) {
-      return
-    }
+  const handleDelete = async (carId: string) => {
+    if (!window.confirm('Are you sure you want to delete this listing?')) return
 
     try {
-      // Delete the document from Firestore
-      await deleteDoc(doc(db, 'cars', car.id))
+      // Fetch car data to delete associated images
+      const carDoc = await getDoc(doc(db, 'cars', carId))
+      const carData = carDoc.data()
 
-      // Delete associated images from Storage
-      if (car.imagePaths) {
+      if (carData?.imagePaths) {
+        // Delete images from storage
         await Promise.all(
-          car.imagePaths.map(async (path) => {
+          carData.imagePaths.map(async (path: string) => {
             const imageRef = ref(storage, path)
-            try {
-              await deleteObject(imageRef)
-            } catch (error) {
-              console.error('Error deleting image:', error)
-            }
+            await deleteObject(imageRef)
           })
         )
       }
 
-      // Update local state
-      setCars(cars.filter(c => c.id !== car.id))
+      // Delete document from Firestore
+      await deleteDoc(doc(db, 'cars', carId))
+      setCars(prevCars => prevCars.filter(car => car.id !== carId))
     } catch (error) {
-      console.error('Error deleting car:', error)
-      setError('Failed to delete the listing. Please try again.')
+      console.error('Error deleting listing:', error)
+      alert('Error deleting listing')
     }
   }
 
@@ -171,7 +167,7 @@ export default function CarList({ isAdminPage = false, filter = 'all' }: CarList
           <CarCard 
             key={car.id} 
             car={car} 
-            onDelete={() => handleDelete(car)} 
+            onDelete={() => handleDelete(car.id)} 
             isAdminPage={isAdminPage}
           />
         ))}
