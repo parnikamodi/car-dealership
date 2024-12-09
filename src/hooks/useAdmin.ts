@@ -32,5 +32,5 @@ export function useAdmin() {
     checkAdminStatus()
   }, [user])
 
-  return { isAdmin, loading }
+  return isAdmin
 }

@@ -5,7 +5,7 @@ import { useAdmin } from '@/hooks/useAdmin'
 import { storage } from '@/lib/firebase/config'
 import { ref, getDownloadURL } from 'firebase/storage'
 import type { Car } from '@/lib/types/car'
-import { EyeIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline'
+import { EyeIcon, ChevronLeftIcon, ChevronRightIcon, TrashIcon } from '@heroicons/react/24/outline'
 import Link from 'next/link'
 import Image from 'next/image'
 
@@ -61,7 +61,21 @@ export default function CarCard({ car, onDelete, isAdminPage }: CarCardProps) {
  }
 
  return (
-   <div className="bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
+   <div className="bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 relative">
+     {isAdmin && isAdminPage && onDelete && (
+       <div className="absolute top-4 right-4 z-20">
+         <button 
+           onClick={(e) => {
+             e.preventDefault();
+             onDelete();
+           }}
+           className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors duration-200 shadow-lg"
+         >
+           <TrashIcon className="h-5 w-5" />
+         </button>
+       </div>
+     )}
+
      {/* Image Section */}
      <div
        className="relative h-72"
@@ -109,7 +123,7 @@ export default function CarCard({ car, onDelete, isAdminPage }: CarCardProps) {
        )}
 
        {/* Views Counter */}
-       <div className="absolute top-4 right-4 bg-black/70 text-white text-sm px-3 py-1.5 rounded flex items-center gap-2 z-10">
+       <div className="absolute top-4 left-4 bg-black/70 text-white text-sm px-3 py-1.5 rounded flex items-center gap-2 z-10">
          <EyeIcon className="w-4 h-4" />
          <span>{car.views || 0}</span>
        </div>
@@ -140,21 +154,13 @@ export default function CarCard({ car, onDelete, isAdminPage }: CarCardProps) {
          <div>Location: {car.tel}</div>
        </div>
 
-       <div className="mt-6 flex gap-3">
+       <div className="mt-6 flex justify-between items-center">
          <Link 
            href={`/ad/${car.id}`}
            className="text-blue-600 font-medium text-base hover:text-blue-800"
          >
            VIEW DETAILS
          </Link>
-         {isAdmin && isAdminPage && (
-           <button 
-             onClick={onDelete} 
-             className="text-red-600 font-medium text-base hover:text-red-800 ml-auto"
-           >
-             DELETE
-           </button>
-         )}
        </div>
      </div>
    </div>

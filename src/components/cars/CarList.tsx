@@ -12,10 +12,12 @@ export interface CarListProps {
   filter?: string;
 }
 
+type SortOption = 'none' | 'priceHigh' | 'priceLow' | 'newest' | 'oldest';
+
 export default function CarList({ isAdminPage = false, filter = 'all' }: CarListProps) {
   const [cars, setCars] = useState<Car[]>([])
   const [loading, setLoading] = useState(true)
-  const [sortOrder, setSortOrder] = useState<'none' | 'high' | 'low'>('none')
+  const [sortOrder, setSortOrder] = useState<SortOption>('newest')
   const [error, setError] = useState<string | null>(null)
 
   // Fetch cars
@@ -52,7 +54,7 @@ export default function CarList({ isAdminPage = false, filter = 'all' }: CarList
     }
 
     fetchCars()
-  }, [filter]) // Added filter to dependency array
+  }, [filter])
 
   // Handle car deletion
   const handleDelete = async (carId: string) => {
@@ -61,16 +63,35 @@ export default function CarList({ isAdminPage = false, filter = 'all' }: CarList
     try {
       // Fetch car data to delete associated images
       const carDoc = await getDoc(doc(db, 'cars', carId))
-      const carData = carDoc.data()
+      
+      if (carDoc.exists()) {
+        const carData = carDoc.data()
+        
+        // Check if imagePaths exists and is an array with items
+        if (carData?.imagePaths && Array.isArray(carData.imagePaths) && carData.imagePaths.length > 0) {
+          // Delete images from storage
+          for (const path of carData.imagePaths) {
+            if (path) { // Additional check to ensure path exists
+              try {
+                const imageRef = ref(storage, path)
+                await deleteObject(imageRef)
+              } catch (imageError) {
+                console.error(`Failed to delete image at path ${path}:`, imageError)
+                // Continue with other deletions even if one fails
+              }
+            }
+          }
+        }
 
-      if (carData?.imagePaths) {
-        // Delete images from storage
-        await Promise.all(
-          carData.imagePaths.map(async (path: string) => {
-            const imageRef = ref(storage, path)
+        // Check for single imagePath as fallback
+        if (carData?.imagePath) {
+          try {
+            const imageRef = ref(storage, carData.imagePath)
             await deleteObject(imageRef)
-          })
-        )
+          } catch (imageError) {
+            console.error(`Failed to delete single image:`, imageError)
+          }
+        }
       }
 
       // Delete document from Firestore
@@ -78,18 +99,24 @@ export default function CarList({ isAdminPage = false, filter = 'all' }: CarList
       setCars(prevCars => prevCars.filter(car => car.id !== carId))
     } catch (error) {
       console.error('Error deleting listing:', error)
-      alert('Error deleting listing')
+      alert('Failed to delete listing. Please try again.')
     }
   }
 
-  // Sort cars based on price
+  // Sort cars based on selected option
   const sortedCars = [...cars].sort((a, b) => {
-    if (sortOrder === 'high') {
-      return b.price - a.price
-    } else if (sortOrder === 'low') {
-      return a.price - b.price
+    switch (sortOrder) {
+      case 'priceHigh':
+        return b.price - a.price
+      case 'priceLow':
+        return a.price - b.price
+      case 'newest':
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      case 'oldest':
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      default:
+        return 0
     }
-    return 0
   })
 
   if (loading) {
@@ -135,28 +162,22 @@ export default function CarList({ isAdminPage = false, filter = 'all' }: CarList
 
   return (
     <div className="max-w-2xl mx-auto">
-      {/* Sort buttons */}
-      <div className="mb-6 flex gap-4 justify-end">
-        <button
-          onClick={() => setSortOrder(current => current === 'high' ? 'none' : 'high')}
-          className={`px-4 py-2 rounded transition ${
-            sortOrder === 'high'
-              ? 'bg-black text-white'
-              : 'bg-gray-200 hover:bg-gray-300'
-          }`}
+      {/* Sort controls */}
+      <div className="mb-6">
+        <label htmlFor="sort" className="block text-sm font-medium text-gray-700 mb-2">
+          Sort By:
+        </label>
+        <select
+          id="sort"
+          value={sortOrder}
+          onChange={(e) => setSortOrder(e.target.value as SortOption)}
+          className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
         >
-          Highest Price
-        </button>
-        <button
-          onClick={() => setSortOrder(current => current === 'low' ? 'none' : 'low')}
-          className={`px-4 py-2 rounded transition ${
-            sortOrder === 'low'
-              ? 'bg-black text-white'
-              : 'bg-gray-200 hover:bg-gray-300'
-          }`}
-        >
-          Lowest Price
-        </button>
+          <option value="newest">Newest Arrivals</option>
+          <option value="oldest">Oldest Listings</option>
+          <option value="priceHigh">Price: High to Low</option>
+          <option value="priceLow">Price: Low to High</option>
+        </select>
       </div>
 
       {/* Car listings */}
