@@ -1,168 +1,115 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useAdmin } from '@/hooks/useAdmin'
+import { useAuth } from '@/hooks/useAuth'
 import { storage } from '@/lib/firebase/config'
 import { ref, getDownloadURL } from 'firebase/storage'
 import type { Car } from '@/lib/types/car'
-import { EyeIcon, ChevronLeftIcon, ChevronRightIcon, TrashIcon } from '@heroicons/react/24/outline'
+import { EyeIcon, TrashIcon } from '@heroicons/react/24/outline'
 import Link from 'next/link'
 import Image from 'next/image'
+import { useSwipeable } from 'react-swipeable'
 
 interface CarCardProps {
- car: Car;
- onDelete?: () => void;
- isAdminPage?: boolean;
+  car: Car;
+  onDelete?: () => void;
+  isAdminPage?: boolean;
 }
 
 export default function CarCard({ car, onDelete, isAdminPage }: CarCardProps) {
- const isAdmin = useAdmin()
- const [imgUrls, setImgUrls] = useState<string[]>([])
- const [currentImageIndex, setCurrentImageIndex] = useState(0)
- const [isHovered, setIsHovered] = useState(false)
+  const { user } = useAuth()
+  const [imgUrls, setImgUrls] = useState<string[]>([])
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
 
- useEffect(() => {
-   const loadImages = async () => {
-     if (car.imagePaths && car.imagePaths.length > 0) {
-       try {
-         const urls = await Promise.all(
-           car.imagePaths.map(path => getDownloadURL(ref(storage, path)))
-         )
-         setImgUrls(urls)
-       } catch (err) {
-         console.error('Error loading images:', err)
-       }
-     } else if (car.imagePath) {
-       try {
-         const url = await getDownloadURL(ref(storage, car.imagePath))
-         setImgUrls([url])
-       } catch (err) {
-         console.error('Error loading image:', err)
-       }
-     }
-   }
-   loadImages()
- }, [car.imagePaths, car.imagePath])
+  useEffect(() => {
+    const loadImages = async () => {
+      if (car.imagePaths && car.imagePaths.length > 0) {
+        try {
+          const urls = await Promise.all(
+            car.imagePaths.map(path => getDownloadURL(ref(storage, path)))
+          )
+          setImgUrls(urls)
+        } catch (err) {
+          console.error('Error loading images:', err)
+        }
+      }
+    }
+    loadImages()
+  }, [car.imagePaths])
 
- const nextImage = () => {
-   setCurrentImageIndex(prev => (prev + 1) % imgUrls.length)
- }
+  const handlers = useSwipeable({
+    onSwipedLeft: () => {
+      setCurrentImageIndex(prev => (prev + 1) % imgUrls.length)
+    },
+    onSwipedRight: () => {
+      setCurrentImageIndex(prev => (prev === 0 ? imgUrls.length - 1 : prev - 1))
+    },
+    trackMouse: true,
+    preventDefaultTouchmoveEvent: true,
+    delta: 10,
+    swipeDuration: 500,
+  })
 
- const previousImage = () => {
-   setCurrentImageIndex(prev => (prev === 0 ? imgUrls.length - 1 : prev - 1))
- }
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 0
+    }).format(price)
+  }
 
- const formatPrice = (price: number) => {
-   return new Intl.NumberFormat('en-IN', {
-     style: 'currency',
-     currency: 'INR',
-     maximumFractionDigits: 0
-   }).format(price)
- }
+  return (
+    <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden">
+      <div {...handlers} className="relative h-72">
+        {imgUrls.length > 0 && (
+          <Image
+            src={imgUrls[currentImageIndex]}
+            alt={car.name}
+            fill
+            className="object-cover"
+            sizes="(max-width: 768px) 100vw, 50vw"
+            priority
+          />
+        )}
+        
+        {/* Views Counter */}
+        <div className="absolute top-4 left-4 bg-black/50 text-white text-sm px-3 py-1.5 rounded-full flex items-center gap-2">
+          <EyeIcon className="w-4 h-4" />
+          <span>{car.views || 0}</span>
+        </div>
 
- return (
-   <div className="bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 relative">
-     {isAdmin && isAdminPage && onDelete && (
-       <div className="absolute top-4 right-4 z-20">
-         <button 
-           onClick={(e) => {
-             e.preventDefault();
-             onDelete();
-           }}
-           className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors duration-200 shadow-lg"
-         >
-           <TrashIcon className="h-5 w-5" />
-         </button>
-       </div>
-     )}
+        {/* Delete Button for Admin */}
+        {user && isAdminPage && onDelete && (
+          <button 
+            onClick={(e) => {
+              e.preventDefault();
+              onDelete();
+            }}
+            className="absolute top-4 right-4 bg-red-500/80 text-white p-2 rounded-full hover:bg-red-600 transition-colors duration-200"
+          >
+            <TrashIcon className="h-5 w-5" />
+          </button>
+        )}
+      </div>
 
-     {/* Image Section */}
-     <div
-       className="relative h-72"
-       onMouseEnter={() => setIsHovered(true)}
-       onMouseLeave={() => setIsHovered(false)}
-     >
-       {imgUrls.length > 0 ? (
-         <div className="relative w-full h-72">
-           <Image
-             src={imgUrls[currentImageIndex]}
-             alt={car.name}
-             fill
-             className="object-cover rounded-t-lg"
-             sizes="(max-width: 768px) 100vw, 50vw"
-             priority
-           />
-         </div>
-       ) : (
-         <div className="w-full h-72 bg-gray-200 rounded-t-lg" />
-       )}
-
-       {/* Navigation Arrows */}
-       {isHovered && imgUrls.length > 1 && (
-         <>
-           <button
-             onClick={previousImage}
-             className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 p-2 rounded-full hover:bg-black/70 z-10"
-           >
-             <ChevronLeftIcon className="h-8 w-8 text-white" />
-           </button>
-           <button
-             onClick={nextImage}
-             className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 p-2 rounded-full hover:bg-black/70 z-10"
-           >
-             <ChevronRightIcon className="h-8 w-8 text-white" />
-           </button>
-         </>
-       )}
-
-       {/* Image Counter */}
-       {imgUrls.length > 1 && (
-         <div className="absolute bottom-4 right-4 bg-black/70 text-white text-sm px-3 py-1.5 rounded z-10">
-           {currentImageIndex + 1} / {imgUrls.length}
-         </div>
-       )}
-
-       {/* Views Counter */}
-       <div className="absolute top-4 left-4 bg-black/70 text-white text-sm px-3 py-1.5 rounded flex items-center gap-2 z-10">
-         <EyeIcon className="w-4 h-4" />
-         <span>{car.views || 0}</span>
-       </div>
-     </div>
-
-     {/* Car Details */}
-     <div className="p-6">
-       <div className="flex items-center gap-3 mb-3">
-         <div className="bg-blue-500 text-white text-sm px-3 py-1.5 rounded">
-           {car.status || 'Live'}
-         </div>
-         {car.featured && (
-           <div className="bg-gray-800 text-white text-sm px-3 py-1.5 rounded">
-             FEATURED
-           </div>
-         )}
-       </div>
-
-       <h2 className="font-medium text-xl mb-2">{car.name}</h2>
-       <div className="text-gray-600 text-base mb-3">
-         {car.year} | {car.info}
-       </div>
-
-       <div className="space-y-2 text-base text-gray-600">
-         <div>Ad Id: {car.id}</div>
-         <div>Posted: {car.posted}</div>
-         <div>Price: {formatPrice(car.price)}</div>
-         <div>Location: {car.tel}</div>
-       </div>
-
-       <div className="mt-6 flex justify-between items-center">
-         <Link 
-           href={`/ad/${car.id}`}
-           className="text-blue-600 font-medium text-base hover:text-blue-800"
-         >
-           VIEW DETAILS
-         </Link>
-       </div>
-     </div>
-   </div>
- )
+      {/* Car Details */}
+      <div className="p-5">
+        <h3 className="text-xl font-semibold text-gray-900 mb-2">{car.name}</h3>
+        <p className="text-amber-600 font-bold text-lg mb-2">
+          {formatPrice(car.price)}
+        </p>
+        <p className="text-gray-600 text-sm mb-4 line-clamp-2">{car.info}</p>
+        
+        <div className="flex justify-between items-center">
+          <span className="text-gray-500 text-sm">Year: {car.year}</span>
+          <Link 
+            href={`/cars/${car.id}`}
+            className="text-amber-600 hover:text-amber-700 text-sm font-medium"
+          >
+            View Details →
+          </Link>
+        </div>
+      </div>
+    </div>
+  )
 }

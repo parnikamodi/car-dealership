@@ -4,28 +4,46 @@ import { useState, useEffect } from 'react'
 import { onAuthStateChanged, User } from 'firebase/auth'
 import { auth } from '@/lib/firebase/config'
 
+interface AuthState {
+  user: User | null
+  loading: boolean
+  error: Error | null
+}
+
 export function useAuth() {
-  const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [authState, setAuthState] = useState<AuthState>({
+    user: null,
+    loading: true,
+    error: null
+  })
 
   useEffect(() => {
-    // Check if running on client side
-    if (typeof window !== 'undefined') {
-      const unsubscribe = onAuthStateChanged(auth, (user) => {
-        setUser(user)
-        setLoading(false)
-      }, (error) => {
-        console.error('Auth state change error:', error)
-        setUser(null)
-        setLoading(false)
-      })
-
-      return () => unsubscribe()
-    } else {
-      // If on server side, set loading to false
-      setLoading(false)
+    if (typeof window === 'undefined') {
+      setAuthState(prev => ({ ...prev, loading: false }))
+      return
     }
+
+    const unsubscribe = onAuthStateChanged(
+      auth,
+      (user) => {
+        setAuthState({
+          user,
+          loading: false,
+          error: null
+        })
+      },
+      (error) => {
+        console.error('Auth state change error:', error)
+        setAuthState({
+          user: null,
+          loading: false,
+          error: error as Error
+        })
+      }
+    )
+
+    return () => unsubscribe()
   }, [])
 
-  return { user, loading }
+  return authState
 }

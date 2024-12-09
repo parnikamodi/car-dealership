@@ -9,6 +9,7 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
 } from 'firebase/auth'
+import { useAuth } from '@/hooks/useAuth'
 
 export default function LoginForm() {
   const router = useRouter()
