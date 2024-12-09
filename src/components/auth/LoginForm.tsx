@@ -1,10 +1,14 @@
 'use client'
 
 import { useState } from 'react'
-import { signInWithEmailAndPassword } from 'firebase/auth'
+import { 
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  GoogleAuthProvider,
+  signInWithPopup 
+} from 'firebase/auth'
 import { auth } from '@/lib/firebase/config'
 import { useRouter } from 'next/navigation'
-
 export default function LoginForm() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
