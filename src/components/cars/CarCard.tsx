@@ -45,7 +45,7 @@ export default function CarCard({ car, onDelete, isAdminPage }: CarCardProps) {
       setCurrentImageIndex(prev => (prev === 0 ? imgUrls.length - 1 : prev - 1))
     },
     trackMouse: true,
-    preventDefaultTouchmoveEvent: true,
+    preventScrollOnSwipe: true,
     delta: 10,
     swipeDuration: 500,
   })
@@ -61,15 +61,37 @@ export default function CarCard({ car, onDelete, isAdminPage }: CarCardProps) {
   return (
     <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden">
       <div {...handlers} className="relative h-72">
-        {imgUrls.length > 0 && (
-          <Image
-            src={imgUrls[currentImageIndex]}
-            alt={car.name}
-            fill
-            className="object-cover"
-            sizes="(max-width: 768px) 100vw, 50vw"
-            priority
-          />
+        {imgUrls.length > 0 ? (
+          <>
+            <Image
+              src={imgUrls[currentImageIndex]}
+              alt={car.name}
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, 50vw"
+              priority
+            />
+            {imgUrls.length > 1 && (
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                {imgUrls.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentImageIndex(index)}
+                    className={`w-2 h-2 rounded-full transition-colors ${
+                      index === currentImageIndex 
+                        ? 'bg-white' 
+                        : 'bg-white/50 hover:bg-white/75'
+                    }`}
+                    aria-label={`View image ${index + 1}`}
+                  />
+                ))}
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400">
+            No image available
+          </div>
         )}
         
         {/* Views Counter */}
@@ -86,6 +108,7 @@ export default function CarCard({ car, onDelete, isAdminPage }: CarCardProps) {
               onDelete();
             }}
             className="absolute top-4 right-4 bg-red-500/80 text-white p-2 rounded-full hover:bg-red-600 transition-colors duration-200"
+            aria-label="Delete car listing"
           >
             <TrashIcon className="h-5 w-5" />
           </button>
