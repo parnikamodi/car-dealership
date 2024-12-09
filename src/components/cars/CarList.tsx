@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { collection, getDocs, query, orderBy, deleteDoc, doc, getDoc, where, Query } from 'firebase/firestore'
+import { collection, getDocs, query, orderBy, deleteDoc, doc, where, Query } from 'firebase/firestore'
 import { ref, deleteObject } from 'firebase/storage'
 import { db, storage } from '@/lib/firebase/config'
 import CarCard from './CarCard'
