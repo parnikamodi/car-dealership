@@ -5,7 +5,7 @@ import { doc, getDoc } from 'firebase/firestore'
 import { db, storage } from '@/lib/firebase/config'
 import Image from 'next/image'
 import { Car } from '@/lib/types/car'
-import { EnvelopeIcon, CalendarIcon, MapPinIcon } from '@heroicons/react/24/outline'
+import { EnvelopeIcon, CalendarIcon, MapPinIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { ref, getDownloadURL } from 'firebase/storage'
@@ -42,6 +42,18 @@ export default function CarDetailPage() {
     fetchCar()
   }, [params.id])
 
+  const nextImage = () => {
+    setCurrentImageIndex((prev) => 
+      prev === imageUrls.length - 1 ? 0 : prev + 1
+    )
+  }
+
+  const previousImage = () => {
+    setCurrentImageIndex((prev) => 
+      prev === 0 ? imageUrls.length - 1 : prev - 1
+    )
+  }
+
   if (!car) {
     return <div>Loading...</div>
   }
@@ -51,13 +63,44 @@ export default function CarDetailPage() {
       {/* Image Gallery */}
       <div className="relative h-[500px] mb-6 bg-gray-100 rounded-lg overflow-hidden group shadow-lg">
         {imageUrls.length > 0 ? (
-          <Image
-            src={imageUrls[currentImageIndex]}
-            alt={car.name}
-            fill
-            className="object-cover"
-            priority
-          />
+          <>
+            <Image
+              src={imageUrls[currentImageIndex]}
+              alt={`${car.name} - Image ${currentImageIndex + 1}`}
+              fill
+              className="object-cover"
+              priority
+            />
+            {imageUrls.length > 1 && (
+              <>
+                <button
+                  onClick={previousImage}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-opacity opacity-0 group-hover:opacity-100"
+                >
+                  <ChevronLeftIcon className="h-6 w-6" />
+                </button>
+                <button
+                  onClick={nextImage}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-opacity opacity-0 group-hover:opacity-100"
+                >
+                  <ChevronRightIcon className="h-6 w-6" />
+                </button>
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                  {imageUrls.map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setCurrentImageIndex(index)}
+                      className={`w-2 h-2 rounded-full transition-colors ${
+                        index === currentImageIndex 
+                          ? 'bg-white' 
+                          : 'bg-white/50 hover:bg-white/75'
+                      }`}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+          </>
         ) : (
           <div className="w-full h-full flex items-center justify-center text-gray-400">
             No images available
@@ -119,4 +162,4 @@ export default function CarDetailPage() {
       </div>
     </div>
   )
-} 
+}
