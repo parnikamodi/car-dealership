@@ -106,10 +106,10 @@ export default function CarList({ isAdminPage = false, filter = 'all' }: CarList
 
   if (loading) {
     return (
-      <div className="flex flex-col space-y-4 max-w-2xl mx-auto">
+      <div className="grid grid-cols-1 gap-4 px-4 sm:px-6 md:max-w-2xl md:mx-auto">
         {[1, 2, 3].map(i => (
           <div key={i} className="bg-white rounded-lg shadow-sm p-4 animate-pulse">
-            <div className="h-48 bg-gray-200 rounded-lg mb-4"></div>
+            <div className="h-48 sm:h-56 bg-gray-200 rounded-lg mb-4"></div>
             <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
             <div className="h-4 bg-gray-200 rounded w-1/2"></div>
           </div>
@@ -120,21 +120,23 @@ export default function CarList({ isAdminPage = false, filter = 'all' }: CarList
 
   if (error) {
     return (
-      <div className="bg-white rounded-lg shadow-sm p-6 text-center max-w-2xl mx-auto">
-        <p className="text-red-600 mb-2">{error}</p>
-        <button
-          onClick={() => window.location.reload()}
-          className="text-blue-600 hover:text-blue-800"
-        >
-          Try Again
-        </button>
+      <div className="mx-4 sm:mx-6 md:max-w-2xl md:mx-auto">
+        <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 text-center">
+          <p className="text-red-600 mb-2">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="text-blue-600 hover:text-blue-800 transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
       </div>
     )
   }
 
   if (cars.length === 0) {
     return (
-      <div className="text-center py-8 max-w-2xl mx-auto">
+      <div className="text-center py-8 px-4 sm:px-6 md:max-w-2xl md:mx-auto">
         <p className="text-gray-600">No cars available at the moment.</p>
         <p className="text-sm text-gray-500 mt-2">
           {filter !== 'all' 
@@ -146,9 +148,9 @@ export default function CarList({ isAdminPage = false, filter = 'all' }: CarList
   }
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="px-4 sm:px-6 md:max-w-2xl md:mx-auto">
       {/* Sort controls */}
-      <div className="mb-6">
+      <div className="mb-6 sticky top-0 bg-gray-50 p-3 rounded-lg shadow-sm z-10">
         <label htmlFor="sort" className="block text-sm font-medium text-gray-700 mb-2">
           Sort By:
         </label>
@@ -156,7 +158,7 @@ export default function CarList({ isAdminPage = false, filter = 'all' }: CarList
           id="sort"
           value={sortOrder}
           onChange={(e) => setSortOrder(e.target.value as SortOption)}
-          className="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+          className="block w-full p-2.5 text-sm border border-gray-300 rounded-lg bg-white shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 hover:border-blue-400 transition-colors"
         >
           <option value="newest">Newest Arrivals</option>
           <option value="oldest">Oldest Listings</option>
@@ -166,14 +168,15 @@ export default function CarList({ isAdminPage = false, filter = 'all' }: CarList
       </div>
 
       {/* Car listings */}
-      <div className="flex flex-col space-y-4">
+      <div className="grid grid-cols-1 gap-4 sm:gap-6 pb-6">
         {sortedCars.map(car => (
-          <CarCard 
-            key={car.id} 
-            car={car} 
-            onDelete={() => handleDelete(car)} 
-            isAdminPage={isAdminPage}
-          />
+          <div key={car.id} className="transform transition-transform hover:-translate-y-1">
+            <CarCard 
+              car={car} 
+              onDelete={() => handleDelete(car)} 
+              isAdminPage={isAdminPage}
+            />
+          </div>
         ))}
       </div>
     </div>
