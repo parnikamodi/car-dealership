@@ -80,13 +80,14 @@ export default function CarDetailPage() {
     )
   }, [imageUrls.length])
 
-  const formatPhoneNumber = useCallback((tel: string) => {
-    const cleaned = tel.replace(/\D/g, '')
-    const match = cleaned.match(/^(\d{2})(\d{5})(\d{5})$/)
-    if (match) {
-      return `+${match[1]} ${match[2]} ${match[3]}`
-    }
-    return tel
+  const formatLocation = useCallback((location: string | undefined) => {
+    if (!location) return 'Location not specified'
+    
+    return location
+      .toLowerCase()
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ')
   }, [])
 
   if (!mounted) return null
@@ -214,24 +215,21 @@ export default function CarDetailPage() {
 
             <div className="flex items-center gap-2 text-gray-600">
               <MapPinIcon className="h-5 w-5" />
-              <span className="capitalize">{car.tel || 'Location not specified'}</span>
+              <span>{formatLocation(car.location)}</span>
             </div>
 
-            <div className="border-t pt-4 mt-4">
-              <h3 className="text-sm font-medium text-gray-700 mb-2">Additional Contact Numbers:</h3>
-              <div className="space-y-2">
-                {PREDEFINED_NUMBERS.map((number, index) => (
-                  <div key={index} className="flex items-center gap-2 text-gray-600">
-                    <PhoneIcon className="h-5 w-5" />
-                    <a 
-                      href={`tel:${number.replace(/\s+/g, '')}`}
-                      className="hover:text-amber-600 transition-colors"
-                    >
-                      {number}
-                    </a>
-                  </div>
-                ))}
-              </div>
+            <div className="space-y-2">
+              {PREDEFINED_NUMBERS.map((number, index) => (
+                <div key={index} className="flex items-center gap-2 text-gray-600">
+                  <PhoneIcon className="h-5 w-5" />
+                  <a 
+                    href={`tel:${number.replace(/\s+/g, '')}`}
+                    className="hover:text-amber-600 transition-colors"
+                  >
+                    {number}
+                  </a>
+                </div>
+              ))}
             </div>
           </div>
           
