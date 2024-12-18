@@ -100,7 +100,7 @@ export default function Navbar() {
                       className="flex items-center gap-2 text-gray-700 hover:text-amber-600 font-medium transition-colors duration-200"
                     >
                       <CogIcon className="h-5 w-5" />
-                      <span>Admin</span>
+                      <span>Delete</span>
                     </Link>
                   )}
 
