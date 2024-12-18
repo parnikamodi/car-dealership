@@ -81,7 +81,7 @@ export default function Navbar(): JSX.Element {
                   aria-label="Delete Advertisement"
                 >
                   <CogIcon className="h-5 w-5" />
-                  <span className="text-sm">Delete</span>
+                  <span className="text-sm">Manage Ad</span>
                 </Link>
               )}
             </div>
