@@ -10,12 +10,10 @@ import { usePathname, useRouter } from 'next/navigation'
 
 export default function Navbar() {
   const { user } = useAuth()
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [showPasswordModal, setShowPasswordModal] = useState(false)
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
-  const dropdownRef = useRef<HTMLDivElement | null>(null)
   const modalRef = useRef<HTMLDivElement | null>(null)
   const pathname = usePathname()
   const router = useRouter()
@@ -25,9 +23,6 @@ export default function Navbar() {
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsSettingsOpen(false)
-      }
       if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
         setShowPasswordModal(false)
         setPassword('')
@@ -60,7 +55,6 @@ export default function Navbar() {
   const handleLogout = async () => {
     try {
       await signOut(auth)
-      setIsSettingsOpen(false)
       setIsMobileMenuOpen(false)
     } catch (error) {
       console.error('Logout error:', error)

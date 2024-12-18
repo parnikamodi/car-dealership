@@ -2,7 +2,7 @@
   "name": "Car Marketplace",
   "short_name": "Dealership",
   "description": "Manage car listings with an admin panel for seamless inventory control.",
-  "start_url": "/",
+  "start_url": "/login",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#000000",
