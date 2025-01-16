@@ -9,7 +9,8 @@ export async function compressImage(file: File): Promise<File> {
     return file;
   }
 
-  const imageCompression = (await import('browser-image-compression')).default;
+  // Import and type the imageCompression function
+  const { default: imageCompression } = await import('browser-image-compression');
   
   // Extremely light compression for very large files
   const targetSizeMB = Math.min(file.size / (1024 * 1024) * 0.99, 50); // Only 1% reduction, max 50MB
@@ -21,14 +22,13 @@ export async function compressImage(file: File): Promise<File> {
     useWebWorker: true,
     initialQuality: 1.0,               // Maximum quality always
     alwaysKeepResolution: true,        // Never reduce resolution
-    fileType: file.type,
+    fileType: file.type as string,
     preserveExif: true,
     useMozJpeg: true,                 // Best quality JPEG encoding
     watermark: {
       enable: false,
     },
     // Maximum quality settings
-    exifOrientation: true,
     strict: true,
     checkOrientation: true,
     maxIteration: 100,                 // Maximum possible iterations for best quality
@@ -36,7 +36,7 @@ export async function compressImage(file: File): Promise<File> {
   };
 
   try {
-    const compressedFile = await imageCompression(file, options);
+    const compressedFile = await imageCompression(file, options) as File;
     
     // Extremely strict quality check
     if (compressedFile.size < file.size * 0.98) {

@@ -84,7 +84,7 @@ export default function CarDetailPage() {
       .join(' ')
   }, [])
 
-  // Add swipe handlers
+  // Updated swipe handlers with correct config
   const handlers = useSwipeable({
     onSwipedLeft: () => {
       if (imageUrls.length > 1) {
@@ -96,7 +96,10 @@ export default function CarDetailPage() {
         setCurrentImageIndex((prev) => (prev - 1 + imageUrls.length) % imageUrls.length)
       }
     },
-    preventDefaultTouchmoveEvent: true,
+    delta: 10, // minimum distance in pixels before a swipe starts
+    swipeDuration: 500, // maximum time in ms to complete swipe
+    touchEventOptions: { passive: false }, // This replaces preventDefaultTouchmoveEvent
+    trackTouch: true, // This replaces trackMouse
     trackMouse: false
   })
 
@@ -144,7 +147,7 @@ export default function CarDetailPage() {
     <div className="max-w-4xl mx-auto p-4">
       <div 
         {...handlers}
-        className="relative aspect-[4/3] w-full mb-6 bg-gray-100 rounded-lg overflow-hidden shadow-lg"
+        className="relative aspect-[4/3] w-full mb-6 bg-gray-100 rounded-lg overflow-hidden shadow-lg touch-pan-y"
       >
         {imageUrls.length > 0 ? (
           <>
