@@ -20,6 +20,7 @@ export default function CarList({ isAdminPage = false, filter = 'all' }: CarList
   const [sortOrder, setSortOrder] = useState<SortOption>('newest')
   const [error, setError] = useState<string | null>(null)
   const [mounted, setMounted] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   useEffect(() => {
     setMounted(true)
@@ -79,53 +80,30 @@ export default function CarList({ isAdminPage = false, filter = 'all' }: CarList
 
   const handleDelete = useCallback(async (car: Car) => {
     if (!window.confirm('Are you sure you want to delete this listing?')) {
-      return
+      return;
     }
 
     try {
-      // Delete the document first
-      await deleteDoc(doc(db, 'cars', car.id))
-      console.log('Document deleted successfully')
-
-      // Then try to delete images
-      const deleteImagePromises: Promise<void>[] = []
+      setIsDeleting(true);
+      await deleteDoc(doc(db, 'cars', car.id));
 
       if (car.imagePaths?.length) {
-        car.imagePaths.forEach(path => {
-          const imageRef = ref(storage, path)
-          const deletePromise = deleteObject(imageRef)
-            .then(() => console.log(`Successfully deleted image: ${path}`))
-            .catch(err => {
-              console.warn(`Failed to delete image ${path}:`, err)
-              // Don't throw error here, just log it
-            })
-          deleteImagePromises.push(deletePromise)
-        })
+        await Promise.allSettled(
+          car.imagePaths.map(path => 
+            deleteObject(ref(storage, path))
+              .catch(err => console.warn(`Failed to delete image ${path}:`, err))
+          )
+        );
       }
 
-      if (car.imagePath) {
-        const imageRef = ref(storage, car.imagePath)
-        const deletePromise = deleteObject(imageRef)
-          .then(() => console.log(`Successfully deleted single image: ${car.imagePath}`))
-          .catch(err => {
-            console.warn(`Failed to delete single image ${car.imagePath}:`, err)
-            // Don't throw error here, just log it
-          })
-        deleteImagePromises.push(deletePromise)
-      }
-
-      // Wait for all image deletions to complete
-      await Promise.allSettled(deleteImagePromises)
-      
-      // Update UI state regardless of image deletion success
-      setCars(prevCars => prevCars.filter(c => c.id !== car.id))
-      console.log('Deletion process completed')
-
+      setCars(prevCars => prevCars.filter(c => c.id !== car.id));
     } catch (error) {
-      console.error('Error in deletion process:', error)
-      setError('Failed to delete the listing. Please try again.')
+      console.error('Error in deletion process:', error);
+      setError('Failed to delete the listing. Please try again.');
+    } finally {
+      setIsDeleting(false);
     }
-  }, [])
+  }, []);
 
   const handleUpdate = useCallback(async (id: string, updatedData: Partial<Car>): Promise<void> => {
     try {

@@ -25,20 +25,22 @@ interface FormData {
   featured: boolean;
 }
 
+const initialFormData: FormData = {
+  name: '',
+  year: new Date().getFullYear(),
+  info: '',
+  price: 0,
+  location: '',
+  featured: false
+}
+
 export default function CarForm() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [imageUploads, setImageUploads] = useState<ImageUploadState[]>([])
   const [uploadProgress, setUploadProgress] = useState(0)
-  const [formData, setFormData] = useState<FormData>({
-    name: '',
-    year: new Date().getFullYear(),
-    info: '',
-    price: 0,
-    location: '',
-    featured: false
-  })
+  const [formData, setFormData] = useState<FormData>(initialFormData)
 
   useEffect(() => {
     if (!authLoading && !user) {

@@ -23,7 +23,6 @@ export default function CarCard({ car, onDelete, onUpdate, isAdminPage }: CarCar
   const [imgUrls, setImgUrls] = useState<string[]>([])
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [isEditing, setIsEditing] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [editForm, setEditForm] = useState({
     name: car.name,
