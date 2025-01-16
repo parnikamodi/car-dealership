@@ -150,10 +150,12 @@ export default function CarCard({ car, onDelete, onUpdate, isAdminPage }: CarCar
           </div>
         )}
 
-        <div className="absolute top-4 left-4 bg-black/50 backdrop-blur-sm text-white text-sm px-3 py-1.5 rounded-full flex items-center gap-2">
-          <EyeIcon className="w-4 h-4" />
-          <span>{car.views || 0}</span>
-        </div>
+        {typeof car.views !== 'undefined' && (
+          <div className="absolute top-4 left-4 bg-black/50 backdrop-blur-sm text-white text-sm px-3 py-1.5 rounded-full flex items-center gap-2">
+            <EyeIcon className="w-4 h-4" />
+            <span>{car.views}</span>
+          </div>
+        )}
 
         {user && isAdminPage && (
           <div className="absolute top-4 right-4 flex gap-2">

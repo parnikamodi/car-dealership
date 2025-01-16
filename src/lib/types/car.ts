@@ -3,16 +3,17 @@ export interface Car {
   name: string;
   year: number;
   price: number;
-  location: string;
   info: string;
+  location: string;
+  tel: string;
   featured: boolean;
-  tel: string; // This will be fixed
   imagePaths: string[];
+  status: 'active' | 'sold' | 'pending';
   createdAt: string;
   updatedAt?: string;
-  status: 'active' | 'sold' | 'pending';
   uid: string;
   email: string;
+  views?: number;
 }
 
 export interface CarFormData {
