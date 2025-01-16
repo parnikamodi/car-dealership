@@ -36,12 +36,12 @@ export async function compressImage(file: File): Promise<File> {
   };
 
   try {
-    let compressedFile = await imageCompression(file, options);
+    const compressedFile = await imageCompression(file, options);
     
     // Extremely strict quality check
-    if (compressedFile.size < file.size * 0.98) { // If compressed more than 2%
+    if (compressedFile.size < file.size * 0.98) {
       console.log('Preserving original quality, compression skipped');
-      return file; // Return original to maintain quality
+      return file;
     }
 
     // Always keep original for these formats

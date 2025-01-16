@@ -9,13 +9,7 @@ import { PhoneIcon, CalendarIcon, MapPinIcon, ChevronLeftIcon, ChevronRightIcon 
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { ref, getDownloadURL } from 'firebase/storage'
-
-// Predefined contact numbers
-const PREDEFINED_NUMBERS = [
-  '+91 98765 43210',
-  '+91 87654 32109',
-  '+91 76543 21098'
-]
+import { useSwipeable } from 'react-swipeable'
 
 export default function CarDetailPage() {
   const params = useParams()
