@@ -20,7 +20,6 @@ export default function CarList({ isAdminPage = false, filter = 'all' }: CarList
   const [sortOrder, setSortOrder] = useState<SortOption>('newest')
   const [error, setError] = useState<string | null>(null)
   const [mounted, setMounted] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
 
   useEffect(() => {
     setMounted(true)
@@ -84,7 +83,6 @@ export default function CarList({ isAdminPage = false, filter = 'all' }: CarList
     }
 
     try {
-      setIsDeleting(true);
       await deleteDoc(doc(db, 'cars', car.id));
 
       if (car.imagePaths?.length) {
@@ -100,8 +98,6 @@ export default function CarList({ isAdminPage = false, filter = 'all' }: CarList
     } catch (error) {
       console.error('Error in deletion process:', error);
       setError('Failed to delete the listing. Please try again.');
-    } finally {
-      setIsDeleting(false);
     }
   }, []);
 
