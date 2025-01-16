@@ -84,6 +84,22 @@ export default function CarDetailPage() {
       .join(' ')
   }, [])
 
+  // Add swipe handlers
+  const handlers = useSwipeable({
+    onSwipedLeft: () => {
+      if (imageUrls.length > 1) {
+        setCurrentImageIndex((prev) => (prev + 1) % imageUrls.length)
+      }
+    },
+    onSwipedRight: () => {
+      if (imageUrls.length > 1) {
+        setCurrentImageIndex((prev) => (prev - 1 + imageUrls.length) % imageUrls.length)
+      }
+    },
+    preventDefaultTouchmoveEvent: true,
+    trackMouse: false
+  })
+
   if (!mounted) return null
 
   if (loading) {
@@ -126,7 +142,10 @@ export default function CarDetailPage() {
 
   return (
     <div className="max-w-4xl mx-auto p-4">
-      <div className="relative aspect-[4/3] w-full mb-6 bg-gray-100 rounded-lg overflow-hidden shadow-lg">
+      <div 
+        {...handlers}
+        className="relative aspect-[4/3] w-full mb-6 bg-gray-100 rounded-lg overflow-hidden shadow-lg"
+      >
         {imageUrls.length > 0 ? (
           <>
             <Image
