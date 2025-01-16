@@ -1,22 +1,18 @@
 export interface Car {
   id: string;
-  uid: string;
   name: string;
-  price: number;
   year: number;
+  price: number;
+  location: string;
   info: string;
-  tel: string;
-  email: string;
-  location: string; // Added location field
-  imagePath?: string;
-  imagePaths?: string[];
   featured: boolean;
-  status: string;
-  views: number;
-  posted: string;
+  tel: string; // This will be fixed
+  imagePaths: string[];
   createdAt: string;
-  // Optional array for multiple contact numbers
-  contactNumbers?: string[];
+  updatedAt?: string;
+  status: 'active' | 'sold' | 'pending';
+  uid: string;
+  email: string;
 }
 
 export interface CarFormData {

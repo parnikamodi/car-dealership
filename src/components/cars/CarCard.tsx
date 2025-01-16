@@ -23,14 +23,15 @@ export default function CarCard({ car, onDelete, onUpdate, isAdminPage }: CarCar
   const [imgUrls, setImgUrls] = useState<string[]>([])
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [isEditing, setIsEditing] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [editForm, setEditForm] = useState({
     name: car.name,
-    price: car.price,
     year: car.year,
-    info: car.info,
-    tel: car.tel,
-    status: car.status
+    price: car.price,
+    location: car.location || '',
+    info: car.info || '',
+    featured: car.featured || false
   })
 
   useEffect(() => {
@@ -74,7 +75,7 @@ export default function CarCard({ car, onDelete, onUpdate, isAdminPage }: CarCar
     }).format(price)
   }
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
     setEditForm(prev => ({
       ...prev,
@@ -195,121 +196,86 @@ export default function CarCard({ car, onDelete, onUpdate, isAdminPage }: CarCar
 
       <AnimatePresence mode="wait">
         {isEditing ? (
-          <motion.form
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="p-4 space-y-4"
-            onSubmit={handleSubmit}
-          >
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name</label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                value={editForm.name}
-                onChange={handleInputChange}
-                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
-                required
-                maxLength={100}
-              />
-            </div>
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold">Edit Listing</h3>
+                <button
+                  onClick={() => setIsEditing(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <XMarkIcon className="h-6 w-6" />
+                </button>
+              </div>
 
-            <div>
-              <label htmlFor="price" className="block text-sm font-medium text-gray-700">Price</label>
-              <input
-                type="number"
-                id="price"
-                name="price"
-                value={editForm.price}
-                onChange={handleInputChange}
-                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
-                required
-                min={0}
-              />
-            </div>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Name</label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={editForm.name}
+                    onChange={handleInputChange}
+                    className="w-full p-2 border rounded"
+                    required
+                  />
+                </div>
 
-            <div>
-              <label htmlFor="year" className="block text-sm font-medium text-gray-700">Year</label>
-              <input
-                type="number"
-                id="year"
-                name="year"
-                value={editForm.year}
-                onChange={handleInputChange}
-                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
-                required
-                min={1900}
-                max={new Date().getFullYear() + 1}
-              />
-            </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Year</label>
+                  <input
+                    type="number"
+                    name="year"
+                    value={editForm.year}
+                    onChange={handleInputChange}
+                    className="w-full p-2 border rounded"
+                    required
+                  />
+                </div>
 
-            <div>
-              <label htmlFor="tel" className="block text-sm font-medium text-gray-700">Phone Number</label>
-              <input
-                type="tel"
-                id="tel"
-                name="tel"
-                value={editForm.tel}
-                onChange={handleInputChange}
-                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
-                required
-                pattern="[0-9]{12}"
-                placeholder="911234567890"
-              />
-              <p className="mt-1 text-xs text-gray-500">Format: 12 digits (e.g., 911234567890)</p>
-            </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Price</label>
+                  <input
+                    type="number"
+                    name="price"
+                    value={editForm.price}
+                    onChange={handleInputChange}
+                    className="w-full p-2 border rounded"
+                    required
+                  />
+                </div>
 
-            <div>
-              <label htmlFor="status" className="block text-sm font-medium text-gray-700">Status</label>
-              <select
-                id="status"
-                name="status"
-                value={editForm.status}
-                onChange={handleInputChange}
-                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
-                required
-              >
-                <option value="available">Available</option>
-                <option value="pending">Pending</option>
-                <option value="sold">Sold</option>
-              </select>
-            </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Location</label>
+                  <input
+                    type="text"
+                    name="location"
+                    value={editForm.location}
+                    onChange={handleInputChange}
+                    className="w-full p-2 border rounded"
+                    required
+                  />
+                </div>
 
-            <div>
-              <label htmlFor="info" className="block text-sm font-medium text-gray-700">Information</label>
-              <textarea
-                id="info"
-                name="info"
-                value={editForm.info}
-                onChange={handleInputChange}
-                rows={3}
-                className="mt-1 block w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
-                required
-                maxLength={500}
-              />
+                <div className="flex justify-end gap-2 mt-6">
+                  <button
+                    type="button"
+                    onClick={() => setIsEditing(false)}
+                    className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="px-4 py-2 bg-amber-600 text-white rounded hover:bg-amber-700 disabled:opacity-50"
+                  >
+                    {isSubmitting ? 'Saving...' : 'Save Changes'}
+                  </button>
+                </div>
+              </form>
             </div>
-
-            <div className="flex gap-3 pt-2">
-              <button
-                type="button"
-                onClick={() => setIsEditing(false)}
-                className="flex-1 rounded-lg border border-gray-300 bg-white py-2 text-base font-medium text-gray-700 shadow-sm active:bg-gray-50 disabled:opacity-50"
-                disabled={isSubmitting}
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="flex-1 rounded-lg border border-transparent bg-amber-600 py-2 text-base font-medium text-white shadow-sm active:bg-amber-700 disabled:opacity-50"
-              >
-                {isSubmitting ? 'Saving...' : 'Save'}
-              </button>
-            </div>
-          </motion.form>
+          </div>
         ) : (
           <motion.div 
             initial={{ opacity: 0 }}

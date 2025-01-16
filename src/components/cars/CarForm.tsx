@@ -21,7 +21,7 @@ interface FormData {
   year: number;
   info: string;
   price: number;
-  tel: string;
+  location: string;
   featured: boolean;
 }
 
@@ -36,7 +36,7 @@ export default function CarForm() {
     year: new Date().getFullYear(),
     info: '',
     price: 0,
-    tel: '',
+    location: '',
     featured: false
   })
 
@@ -95,17 +95,11 @@ export default function CarForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
-    if (imageUploads.length === 0 || loading || !user) {
-      alert('Please add at least one image and ensure you are logged in')
-      return
-    }
+    if (!user || loading) return
 
     try {
       setLoading(true)
       setUploadProgress(0)
-      const totalUploads = imageUploads.length
-      let completedUploads = 0
 
       const imagePaths = await Promise.all(
         imageUploads.map(async (upload, index) => {
@@ -118,9 +112,6 @@ export default function CarForm() {
           const storageRef = ref(storage, filePath)
           await uploadBytes(storageRef, upload.file)
           
-          completedUploads++
-          setUploadProgress((completedUploads / totalUploads) * 100)
-          
           return filePath
         })
       )
@@ -130,7 +121,7 @@ export default function CarForm() {
         year: Number(formData.year),
         info: formData.info,
         price: Number(formData.price),
-        tel: formData.tel,
+        tel: '911234567890',
         featured: formData.featured,
         uid: user.uid,
         email: user.email,
@@ -253,8 +244,8 @@ export default function CarForm() {
             required
             placeholder="e.g., Park Street, Kolkata"
             className="w-full p-2 border rounded"
-            value={formData.tel}
-            onChange={(e) => setFormData(prev => ({ ...prev, tel: e.target.value }))}
+            value={formData.location}
+            onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
           />
         </div>
 
