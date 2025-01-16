@@ -152,7 +152,7 @@ export default function CarCard({ car, onDelete, onUpdate, isAdminPage }: CarCar
 
         <div className="absolute top-4 left-4 bg-black/50 backdrop-blur-sm text-white text-sm px-3 py-1.5 rounded-full flex items-center gap-2">
           <EyeIcon className="w-4 h-4" />
-          <span>{car.views}</span>
+          <span>{car.views || 0}</span>
         </div>
 
         {user && isAdminPage && (
