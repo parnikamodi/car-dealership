@@ -13,7 +13,7 @@ export interface Car {
   updatedAt?: string;
   uid: string;
   email: string;
-  views?: number;
+  views: number;
 }
 
 export interface CarFormData {

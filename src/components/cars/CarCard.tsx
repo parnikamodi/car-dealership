@@ -293,7 +293,7 @@ export default function CarCard({ car, onDelete, onUpdate, isAdminPage }: CarCar
                 </p>
               </div>
               <span className={`px-2 py-1 rounded-full text-sm font-medium ${
-                car.status === 'available' 
+                car.status === 'active'
                   ? 'bg-green-100 text-green-800'
                   : car.status === 'pending'
                   ? 'bg-yellow-100 text-yellow-800'
