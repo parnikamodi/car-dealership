@@ -6,15 +6,6 @@ import { storage, db } from '@/lib/firebase/config'
 import { ref, uploadBytes } from 'firebase/storage'
 import { collection, addDoc } from 'firebase/firestore'
 import { useRouter } from 'next/navigation'
-import { compressImage } from '@/utils/imageCompression'
-import Image from 'next/image'
-
-interface ImageUploadState {
-  file: File;
-  preview?: string;
-  uploading: boolean;
-  error?: string;
-}
 
 interface FormData {
   name: string;
@@ -37,10 +28,7 @@ const initialFormData: FormData = {
 export default function CarForm() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
-  const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [imageUploads, setImageUploads] = useState<ImageUploadState[]>([])
-  const [uploadProgress, setUploadProgress] = useState(0)
   const [formData, setFormData] = useState<FormData>(initialFormData)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -58,22 +46,13 @@ export default function CarForm() {
       setIsSubmitting(true)
       setError('')
 
-      // Upload images first
-      const uploadedPaths: string[] = []
-      for (const upload of imageUploads) {
-        const path = `cars/${user.uid}/${Date.now()}-${upload.file.name}`
-        const storageRef = ref(storage, path)
-        await uploadBytes(storageRef, upload.file)
-        uploadedPaths.push(path)
-      }
-
       // Add document to Firestore
       await addDoc(collection(db, 'cars'), {
         ...formData,
         tel: '911234567890', // Fixed phone number
         uid: user.uid,
         email: user.email,
-        imagePaths: uploadedPaths,
+        imagePaths: [], // Initialize with empty array
         status: 'active',
         views: 0,
         createdAt: new Date().toISOString(),
@@ -97,7 +76,6 @@ export default function CarForm() {
       )}
 
       <div className="space-y-4">
-        {/* Form fields */}
         <div>
           <label className="block text-sm font-medium mb-1">Name*</label>
           <input
@@ -173,7 +151,7 @@ export default function CarForm() {
 
       <button
         type="submit"
-        disabled={isSubmitting || !imageUploads.length}
+        disabled={isSubmitting}
         className="w-full bg-amber-600 text-white py-2 px-4 rounded hover:bg-amber-700 disabled:opacity-50"
       >
         {isSubmitting ? 'Adding...' : 'Add Listing'}

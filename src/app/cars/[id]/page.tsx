@@ -53,6 +53,7 @@ export default function CarDetailPage() {
 
   useEffect(() => {
     setMounted(true)
+    return () => setMounted(false)
   }, [])
 
   useEffect(() => {
