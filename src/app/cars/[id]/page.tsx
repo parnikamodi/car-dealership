@@ -12,49 +12,48 @@ import { ref, getDownloadURL } from 'firebase/storage'
 import { useSwipeable } from 'react-swipeable'
 
 export default function CarDetailPage() {
-  const params = useParams()
   const [car, setCar] = useState<Car | null>(null)
+  const [error, setError] = useState<string>('')
   const [imageUrls, setImageUrls] = useState<string[]>([])
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
+  const { id } = useParams()
 
   const fetchCar = useCallback(async () => {
-    if (!params.id) return
-    
     try {
       setLoading(true)
-      setError(null)
-      
-      const carDoc = await getDoc(doc(db, 'cars', params.id as string))
-      if (carDoc.exists()) {
-        const carData = { id: carDoc.id, ...carDoc.data() } as Car
+      setError('')
+      const docRef = doc(db, 'cars', id as string)
+      const docSnap = await getDoc(docRef)
+
+      if (docSnap.exists()) {
+        const carData = { id: docSnap.id, ...docSnap.data() } as Car
         setCar(carData)
 
-        if (carData.imagePaths && carData.imagePaths.length > 0) {
+        // Handle image URLs
+        if (carData.imagePaths?.length) {
           const urls = await Promise.all(
-            carData.imagePaths.map(path => getDownloadURL(ref(storage, path)))
+            carData.imagePaths.map(path => 
+              getDownloadURL(ref(storage, path))
+            )
           )
           setImageUrls(urls)
-        } else if (carData.imagePath) {
-          const url = await getDownloadURL(ref(storage, carData.imagePath))
-          setImageUrls([url])
         }
       } else {
         setError('Car not found')
       }
     } catch (err) {
       console.error('Error fetching car:', err)
-      setError('Failed to load car details. Please try again.')
+      setError('Failed to load car details')
     } finally {
       setLoading(false)
     }
-  }, [params.id])
+  }, [id])
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     if (mounted) {
