@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/hooks/useAuth'
-import { storage, db } from '@/lib/firebase/config'
-import { ref, uploadBytes } from 'firebase/storage'
+import { db } from '@/lib/firebase/config'
 import { collection, addDoc } from 'firebase/firestore'
 import { useRouter } from 'next/navigation'
 

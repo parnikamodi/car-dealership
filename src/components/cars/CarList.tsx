@@ -1,26 +1,26 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { collection, query, getDocs, orderBy, where, Query } from 'firebase/firestore'
-import { db } from '@/lib/firebase/config'
-import CarCard from './CarCard'
-import { Car } from '@/lib/types/car'
-import { deleteDoc, doc } from 'firebase/firestore'
+import { collection, getDocs, query, orderBy, deleteDoc, doc, where, Query, updateDoc, Timestamp } from 'firebase/firestore'
 import { ref, deleteObject } from 'firebase/storage'
-import { storage } from '@/lib/firebase/config'
+import { db, storage } from '@/lib/firebase/config'
+import CarCard from './CarCard'
+import type { Car } from '@/lib/types/car'
 
-type SortOption = 'newest' | 'oldest' | 'price-high' | 'price-low'
-
-interface CarListProps {
-  isAdminPage?: boolean
-  filter?: 'all' | 'active' | 'sold' | 'pending'
+export interface CarListProps {
+  isAdminPage?: boolean;
+  filter?: string;
 }
 
 export default function CarList({ isAdminPage = false, filter = 'all' }: CarListProps) {
   const [cars, setCars] = useState<Car[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [sortOrder, setSortOrder] = useState<SortOption>('newest')
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const fetchCars = useCallback(async () => {
     setLoading(true)
@@ -49,11 +49,13 @@ export default function CarList({ isAdminPage = false, filter = 'all' }: CarList
           info: data.info,
           tel: data.tel,
           email: data.email,
-          imagePaths: data.imagePaths || [],
+          imagePath: data.imagePath,
+          imagePaths: data.imagePaths,
           featured: data.featured,
           status: data.status,
-          views: data.views || 0,
-          location: data.location || '',
+          views: data.views,
+          posted: data.posted,
+          location: data.location || '', // Add missing required location field
           createdAt: data.createdAt?.toDate?.()?.toISOString() || data.createdAt,
         } as Car
       })
@@ -68,16 +70,18 @@ export default function CarList({ isAdminPage = false, filter = 'all' }: CarList
   }, [filter])
 
   useEffect(() => {
-    fetchCars()
-  }, [fetchCars])
+    if (mounted) {
+      fetchCars()
+    }
+  }, [fetchCars, mounted])
 
   const handleDelete = useCallback(async (car: Car) => {
     if (!window.confirm('Are you sure you want to delete this listing?')) {
-      return
+      return;
     }
 
     try {
-      await deleteDoc(doc(db, 'cars', car.id))
+      await deleteDoc(doc(db, 'cars', car.id));
 
       if (car.imagePaths?.length) {
         await Promise.allSettled(
@@ -85,49 +89,120 @@ export default function CarList({ isAdminPage = false, filter = 'all' }: CarList
             deleteObject(ref(storage, path))
               .catch(err => console.warn(`Failed to delete image ${path}:`, err))
           )
-        )
+        );
       }
 
-      setCars(prevCars => prevCars.filter(c => c.id !== car.id))
+      setCars(prevCars => prevCars.filter(c => c.id !== car.id));
     } catch (error) {
-      console.error('Error in deletion process:', error)
-      setError('Failed to delete the listing. Please try again.')
+      console.error('Error in deletion process:', error);
+      setError('Failed to delete the listing. Please try again.');
     }
-  }, [])
+  }, []);
 
-  const handleUpdate = useCallback(async (id: string, data: Partial<Car>) => {
+  const handleUpdate = useCallback(async (id: string, updatedData: Partial<Car>): Promise<void> => {
     try {
-      await updateDoc(doc(db, 'cars', id), data)
+      const carRef = doc(db, 'cars', id)
+      
+      const updateData = {
+        ...updatedData,
+        updatedAt: Timestamp.now()
+      }
+
+      await updateDoc(carRef, updateData)
+
       setCars(prevCars =>
         prevCars.map(car =>
-          car.id === id ? { ...car, ...data } : car
+          car.id === id
+            ? { 
+                ...car, 
+                ...updatedData,
+              }
+            : car
         )
       )
     } catch (error) {
       console.error('Error updating car:', error)
+      setError('Failed to update the listing. Please try again.')
       throw error
     }
   }, [])
 
   if (loading) {
-    return <div className="text-center py-8">Loading...</div>
+    return (
+      <div className="grid grid-cols-1 gap-4 px-4 sm:px-6 md:max-w-2xl md:mx-auto">
+        {[1, 2, 3].map(i => (
+          <div key={i} className="bg-white rounded-lg shadow-sm p-4 animate-pulse">
+            <div className="h-48 sm:h-56 bg-gray-200 rounded-lg mb-4" />
+            <div className="h-4 bg-gray-200 rounded w-3/4 mb-2" />
+            <div className="h-4 bg-gray-200 rounded w-1/2" />
+          </div>
+        ))}
+      </div>
+    )
   }
 
   if (error) {
-    return <div className="text-center text-red-600 py-8">{error}</div>
+    return (
+      <div className="mx-4 sm:mx-6 md:max-w-2xl md:mx-auto">
+        <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 text-center">
+          <p className="text-red-600 mb-2">{error}</p>
+          <button
+            onClick={() => fetchCars()}
+            className="text-blue-600 hover:text-blue-800 transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    )
   }
 
+  if (cars.length === 0) {
+    return (
+      <div className="text-center py-8 px-4 sm:px-6 md:max-w-2xl md:mx-auto">
+        <p className="text-gray-600">No cars available at the moment.</p>
+        <p className="text-sm text-gray-500 mt-2">
+          {filter !== 'all' 
+            ? `No cars found with status "${filter}". Try a different filter.`
+            : 'Please check back later for new listings.'}
+        </p>
+      </div>
+    )
+  }
+
+  if (!mounted) return null
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
-      {cars.map(car => (
-        <CarCard
-          key={car.id}
-          car={car}
-          onDelete={handleDelete}
-          onUpdate={handleUpdate}
-          isAdminPage={isAdminPage}
-        />
-      ))}
+    <div className="px-4 sm:px-6 md:max-w-2xl md:mx-auto">
+      <div className="mb-6 sticky top-0 bg-gray-50 p-3 rounded-lg shadow-sm z-10">
+        <label htmlFor="sort" className="block text-sm font-medium text-gray-700 mb-2">
+          Sort By:
+        </label>
+        <select
+          id="sort"
+          value={sortOrder}
+          onChange={(e) => setSortOrder(e.target.value as SortOption)}
+          className="block w-full p-2.5 text-sm border border-gray-300 rounded-lg bg-white shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 hover:border-blue-400 transition-colors"
+        >
+          <option value="newest">Newest Arrivals</option>
+          <option value="oldest">Oldest Listings</option>
+          <option value="priceHigh">Price: High to Low</option>
+          <option value="priceLow">Price: Low to High</option>
+        </select>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 sm:gap-6 pb-6">
+        {sortedCars().map(car => (
+          <div key={car.id} className="transform transition-transform hover:-translate-y-1">
+            <CarCard 
+              car={car} 
+              onDelete={() => handleDelete(car)}
+              onUpdate={handleUpdate}
+              isAdminPage={isAdminPage}
+            />
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
