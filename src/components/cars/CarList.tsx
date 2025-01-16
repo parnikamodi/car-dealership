@@ -83,33 +83,46 @@ export default function CarList({ isAdminPage = false, filter = 'all' }: CarList
     }
 
     try {
+      // Delete the document first
       await deleteDoc(doc(db, 'cars', car.id))
+      console.log('Document deleted successfully')
 
-      if (car.imagePaths) {
-        await Promise.all(
-          car.imagePaths.map(async (path) => {
-            const imageRef = ref(storage, path)
-            try {
-              await deleteObject(imageRef)
-            } catch (error) {
-              console.error('Error deleting image:', error)
-            }
-          })
-        )
+      // Then try to delete images
+      const deleteImagePromises: Promise<void>[] = []
+
+      if (car.imagePaths?.length) {
+        car.imagePaths.forEach(path => {
+          const imageRef = ref(storage, path)
+          const deletePromise = deleteObject(imageRef)
+            .then(() => console.log(`Successfully deleted image: ${path}`))
+            .catch(err => {
+              console.warn(`Failed to delete image ${path}:`, err)
+              // Don't throw error here, just log it
+            })
+          deleteImagePromises.push(deletePromise)
+        })
       }
 
       if (car.imagePath) {
         const imageRef = ref(storage, car.imagePath)
-        try {
-          await deleteObject(imageRef)
-        } catch (error) {
-          console.error('Error deleting single image:', error)
-        }
+        const deletePromise = deleteObject(imageRef)
+          .then(() => console.log(`Successfully deleted single image: ${car.imagePath}`))
+          .catch(err => {
+            console.warn(`Failed to delete single image ${car.imagePath}:`, err)
+            // Don't throw error here, just log it
+          })
+        deleteImagePromises.push(deletePromise)
       }
 
+      // Wait for all image deletions to complete
+      await Promise.allSettled(deleteImagePromises)
+      
+      // Update UI state regardless of image deletion success
       setCars(prevCars => prevCars.filter(c => c.id !== car.id))
+      console.log('Deletion process completed')
+
     } catch (error) {
-      console.error('Error deleting car:', error)
+      console.error('Error in deletion process:', error)
       setError('Failed to delete the listing. Please try again.')
     }
   }, [])
