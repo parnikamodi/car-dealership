@@ -2,34 +2,43 @@
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/hooks/useAuth'
-import { db } from '@/lib/firebase/config'
+import { storage, db } from '@/lib/firebase/config'
+import { ref, uploadBytes } from 'firebase/storage'
 import { collection, addDoc } from 'firebase/firestore'
 import { useRouter } from 'next/navigation'
+import { compressImage } from '@/utils/imageCompression'
+import Image from 'next/image'
+
+interface ImageUploadState {
+  file: File;
+  preview?: string;
+  uploading: boolean;
+  error?: string;
+}
 
 interface FormData {
   name: string;
   year: number;
   info: string;
   price: number;
-  location: string;
+  tel: string;
   featured: boolean;
-}
-
-const initialFormData: FormData = {
-  name: '',
-  year: new Date().getFullYear(),
-  info: '',
-  price: 0,
-  location: '',
-  featured: false
 }
 
 export default function CarForm() {
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
-  const [error, setError] = useState('')
-  const [formData, setFormData] = useState<FormData>(initialFormData)
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [imageUploads, setImageUploads] = useState<ImageUploadState[]>([])
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const [formData, setFormData] = useState<FormData>({
+    name: '',
+    year: new Date().getFullYear(),
+    info: '',
+    price: 0,
+    tel: '',
+    featured: false
+  })
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -37,50 +46,162 @@ export default function CarForm() {
     }
   }, [user, authLoading, router])
 
+  useEffect(() => {
+    return () => {
+      imageUploads.forEach(upload => {
+        if (upload.preview) {
+          URL.revokeObjectURL(upload.preview)
+        }
+      })
+    }
+  }, [imageUploads])
+
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files?.length) return
+
+    const newFiles = Array.from(e.target.files)
+    const existingCount = imageUploads.length
+    const totalAllowed = 50
+    const remainingSlots = totalAllowed - existingCount
+
+    if (newFiles.length > remainingSlots) {
+      alert(`You can only add ${remainingSlots} more images. Maximum 50 images allowed.`)
+      return
+    }
+
+    setUploadProgress(0)
+    const totalFiles = newFiles.length
+    let processedFiles = 0
+
+    const compressedImages: ImageUploadState[] = []
+    
+    for (const file of newFiles) {
+      try {
+        const compressedFile = await compressImage(file)
+        compressedImages.push({
+          file: compressedFile,
+          preview: URL.createObjectURL(compressedFile),
+          uploading: false
+        })
+        processedFiles++
+        setUploadProgress((processedFiles / totalFiles) * 100)
+      } catch (error) {
+        console.error(`Error processing image ${file.name}:`, error)
+      }
+    }
+
+    setImageUploads(prev => [...prev, ...compressedImages])
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!user || isSubmitting) return
+    
+    if (imageUploads.length === 0 || loading || !user) {
+      alert('Please add at least one image and ensure you are logged in')
+      return
+    }
 
     try {
-      setIsSubmitting(true)
-      setError('')
+      setLoading(true)
+      setUploadProgress(0)
+      const totalUploads = imageUploads.length
+      let completedUploads = 0
 
-      // Add document to Firestore
-      await addDoc(collection(db, 'cars'), {
-        ...formData,
-        tel: '911234567890', // Fixed phone number
+      const imagePaths = await Promise.all(
+        imageUploads.map(async (upload, index) => {
+          const timestamp = Date.now()
+          const randomId = Math.random().toString(36).substring(7)
+          const fileExtension = upload.file.name.split('.').pop()
+          const safeFileName = `${timestamp}_${randomId}_${index}.${fileExtension}`
+          const filePath = `images/${user.uid}/${safeFileName}`
+          
+          const storageRef = ref(storage, filePath)
+          await uploadBytes(storageRef, upload.file)
+          
+          completedUploads++
+          setUploadProgress((completedUploads / totalUploads) * 100)
+          
+          return filePath
+        })
+      )
+
+      const carData = {
+        name: formData.name,
+        year: Number(formData.year),
+        info: formData.info,
+        price: Number(formData.price),
+        tel: formData.tel,
+        featured: formData.featured,
         uid: user.uid,
         email: user.email,
-        imagePaths: [], // Initialize with empty array
-        status: 'active',
+        imagePaths: imagePaths,
+        posted: new Date().toLocaleDateString('en-GB'),
         views: 0,
-        createdAt: new Date().toISOString(),
-      })
+        status: 'Live',
+        createdAt: new Date().toISOString()
+      }
 
-      router.push('/admin')
+      await addDoc(collection(db, "cars"), carData)
+      alert('Advertisement created successfully!')
+      router.push('/')
+
     } catch (error) {
-      console.error('Error adding car:', error)
-      setError('Failed to add listing. Please try again.')
+      console.error("Error:", error)
+      alert(`Error creating listing: ${error instanceof Error ? error.message : 'Unknown error'}`)
     } finally {
-      setIsSubmitting(false)
+      setLoading(false)
+      setUploadProgress(0)
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl mx-auto p-6">
-      {error && (
-        <div className="bg-red-50 text-red-600 p-4 rounded-lg">
-          {error}
-        </div>
-      )}
-
-      <div className="space-y-4">
+    <div className="max-w-2xl mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-6">Create New Listing</h1>
+      
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium mb-1">Name*</label>
+          <label className="block text-sm font-medium mb-1">Car Images (Up to 50)*</label>
+          <input
+            type="file"
+            multiple
+            accept="image/*"
+            onChange={handleImageSelect}
+            className="w-full p-2 border rounded"
+          />
+          {uploadProgress > 0 && (
+            <div className="mt-2">
+              <div className="h-2 bg-gray-200 rounded">
+                <div 
+                  className="h-2 bg-blue-500 rounded transition-all"
+                  style={{ width: `${uploadProgress}%` }}
+                ></div>
+              </div>
+              <p className="text-sm text-gray-600 mt-1">Processing: {Math.round(uploadProgress)}%</p>
+            </div>
+          )}
+          <div className="mt-2 grid grid-cols-4 gap-2">
+            {imageUploads.map((upload, index) => (
+              <div key={index} className="relative w-full h-24">
+                {upload.preview && (
+                  <Image
+                    src={upload.preview}
+                    alt={`Preview ${index + 1}`}
+                    fill
+                    className="object-cover rounded"
+                    sizes="(max-width: 768px) 25vw, 20vw"
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">Car Model & Variant*</label>
           <input
             type="text"
             required
-            placeholder="Enter car name"
+            placeholder="e.g., Jeep Compass 2.0 Limited Option"
             className="w-full p-2 border rounded"
             value={formData.name}
             onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
@@ -88,24 +209,24 @@ export default function CarForm() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1">Year*</label>
+          <label className="block text-sm font-medium mb-1">Model Year*</label>
           <input
             type="number"
             required
             min={1900}
             max={new Date().getFullYear() + 1}
             className="w-full p-2 border rounded"
-            value={formData.year || ''}
+            value={formData.year}
             onChange={(e) => setFormData(prev => ({ ...prev, year: Number(e.target.value) }))}
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1">Description*</label>
-          <textarea
+          <label className="block text-sm font-medium mb-1">Version Info*</label>
+          <input
+            type="text"
             required
-            rows={4}
-            placeholder="Enter car details"
+            placeholder="e.g., version-Compass 2.0 Limited"
             className="w-full p-2 border rounded"
             value={formData.info}
             onChange={(e) => setFormData(prev => ({ ...prev, info: e.target.value }))}
@@ -132,8 +253,8 @@ export default function CarForm() {
             required
             placeholder="e.g., Park Street, Kolkata"
             className="w-full p-2 border rounded"
-            value={formData.location}
-            onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
+            value={formData.tel}
+            onChange={(e) => setFormData(prev => ({ ...prev, tel: e.target.value }))}
           />
         </div>
 
@@ -141,20 +262,31 @@ export default function CarForm() {
           <label className="text-sm font-medium">Featured Listing</label>
           <input
             type="checkbox"
-            className="form-checkbox h-4 w-4 text-amber-600"
+            className="form-checkbox h-4 w-4 text-blue-500"
             checked={formData.featured}
             onChange={(e) => setFormData(prev => ({ ...prev, featured: e.target.checked }))}
           />
         </div>
-      </div>
 
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="w-full bg-amber-600 text-white py-2 px-4 rounded hover:bg-amber-700 disabled:opacity-50"
-      >
-        {isSubmitting ? 'Adding...' : 'Add Listing'}
-      </button>
-    </form>
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 
+                   transition disabled:bg-gray-400 flex items-center justify-center gap-2"
+        >
+          {loading ? (
+            <>
+              <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              Creating...
+            </>
+          ) : (
+            'Create Listing'
+          )}
+        </button>
+      </form>
+    </div>
   )
 }
