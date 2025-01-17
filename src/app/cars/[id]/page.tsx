@@ -1,27 +1,27 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, use } from 'react'
 import { doc, getDoc } from 'firebase/firestore'
 import { ref, getDownloadURL } from 'firebase/storage'
 import { db, storage } from '@/lib/firebase/config'
-import { useRouter } from 'next/navigation'
 import { CalendarIcon, PhoneIcon } from '@heroicons/react/24/outline'
+import Image from 'next/image'
 import type { Car } from '@/lib/types/car'
 
-export default function CarDetailPage({ params }: { params: { id: string } }) {
+export default function CarDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params)
   const [car, setCar] = useState<Car | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [imageUrls, setImageUrls] = useState<string[]>([])
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
-  const router = useRouter()
 
   const CONTACT_PHONE_NUMBER = process.env.NEXT_PUBLIC_CONTACT_PHONE_NUMBER || ''
 
   useEffect(() => {
     const fetchCar = async () => {
       try {
-        const carDoc = await getDoc(doc(db, 'cars', params.id))
+        const carDoc = await getDoc(doc(db, 'cars', id))
         if (!carDoc.exists()) {
           setError('Car not found')
           return
@@ -43,7 +43,7 @@ export default function CarDetailPage({ params }: { params: { id: string } }) {
     }
 
     fetchCar()
-  }, [params.id])
+  }, [id])
 
   const loadImages = async (carData: Car) => {
     try {
@@ -79,13 +79,18 @@ export default function CarDetailPage({ params }: { params: { id: string } }) {
       <div className="relative aspect-video bg-gray-100 rounded-lg overflow-hidden mb-6">
         {imageUrls.length > 0 ? (
           <>
-            <img
-              src={imageUrls[currentImageIndex]}
-              alt={`${car.name} - Image ${currentImageIndex + 1}`}
-              className="w-full h-full object-cover"
-            />
+            <div className="relative w-full h-full">
+              <Image
+                src={imageUrls[currentImageIndex]}
+                alt={`${car.name} - Image ${currentImageIndex + 1}`}
+                fill
+                className="object-cover"
+                priority={currentImageIndex === 0}
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              />
+            </div>
 
-            <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
+            <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 z-10">
               {imageUrls.map((_, index) => (
                 <button
                   key={index}
