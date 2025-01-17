@@ -21,7 +21,7 @@ export default function CarCard({ car, onDelete, onUpdate, isAdminPage }: CarCar
   const { user } = useAuth()
   const [imgUrls, setImgUrls] = useState<string[]>([])
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
-
+  const [direction, setDirection] = useState(0)
   const [isEditing, setIsEditing] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [editForm, setEditForm] = useState({
@@ -48,9 +48,32 @@ export default function CarCard({ car, onDelete, onUpdate, isAdminPage }: CarCar
     loadImages()
   }, [car.imagePaths])
 
-  const navigateImage = (direction: number) => {
+  const slideVariants = {
+    enter: (direction: number) => ({
+      x: direction > 0 ? 1000 : -1000,
+      opacity: 0
+    }),
+    center: {
+      zIndex: 1,
+      x: 0,
+      opacity: 1
+    },
+    exit: (direction: number) => ({
+      zIndex: 0,
+      x: direction < 0 ? 1000 : -1000,
+      opacity: 0
+    })
+  }
+
+  const swipeConfidenceThreshold = 10000
+  const swipePower = (offset: number, velocity: number) => {
+    return Math.abs(offset) * velocity
+  }
+
+  const paginate = (newDirection: number) => {
+    setDirection(newDirection)
     setCurrentImageIndex((prevIndex) => {
-      if (direction === 1) {
+      if (newDirection === 1) {
         return prevIndex === imgUrls.length - 1 ? 0 : prevIndex + 1
       }
       return prevIndex === 0 ? imgUrls.length - 1 : prevIndex - 1
@@ -97,14 +120,30 @@ export default function CarCard({ car, onDelete, onUpdate, isAdminPage }: CarCar
 
   const CardContent = () => (
     <>
-      <div className="relative h-72 bg-gray-100 group">
-        <AnimatePresence mode="wait">
+      <div className="relative h-72 bg-gray-100 group overflow-hidden">
+        <AnimatePresence initial={false} custom={direction} mode="wait">
           <motion.div
             key={currentImageIndex}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
+            custom={direction}
+            variants={slideVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{
+              x: { type: "spring", stiffness: 300, damping: 30 },
+              opacity: { duration: 0.2 }
+            }}
+            drag="x"
+            dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={1}
+            onDragEnd={(e, { offset, velocity }) => {
+              const swipe = swipePower(offset.x, velocity.x)
+              if (swipe < -swipeConfidenceThreshold) {
+                paginate(1)
+              } else if (swipe > swipeConfidenceThreshold) {
+                paginate(-1)
+              }
+            }}
             className="absolute w-full h-full"
           >
             {imgUrls.length > 0 ? (
@@ -130,7 +169,7 @@ export default function CarCard({ car, onDelete, onUpdate, isAdminPage }: CarCar
             <button
               onClick={(e) => {
                 e.preventDefault()
-                navigateImage(-1)
+                paginate(-1)
               }}
               className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-all opacity-0 group-hover:opacity-100 focus:opacity-100 z-10"
               aria-label="Previous image"
@@ -141,7 +180,7 @@ export default function CarCard({ car, onDelete, onUpdate, isAdminPage }: CarCar
             <button
               onClick={(e) => {
                 e.preventDefault()
-                navigateImage(1)
+                paginate(1)
               }}
               className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-all opacity-0 group-hover:opacity-100 focus:opacity-100 z-10"
               aria-label="Next image"
@@ -155,6 +194,7 @@ export default function CarCard({ car, onDelete, onUpdate, isAdminPage }: CarCar
                   key={index}
                   onClick={(e) => {
                     e.preventDefault()
+                    setDirection(index > currentImageIndex ? 1 : -1)
                     setCurrentImageIndex(index)
                   }}
                   className={`w-2 h-2 rounded-full transition-opacity duration-200 ${

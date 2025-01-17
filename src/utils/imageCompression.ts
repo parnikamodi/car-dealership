@@ -35,9 +35,11 @@ export async function compressImage(file: File): Promise<File> {
     exifOrientation: true,             // Preserve image orientation
     fastDecodingSize: 0,              // Disable fast decoding to maintain quality
   };
-
   try {
-    const compressedFile = await imageCompression(file, options) as File;
+    const compressedFile = await imageCompression(file, {
+      ...options,
+      exifOrientation: 1 // Fix type error by using number instead of boolean
+    }) as File;
     
     // Even stricter quality preservation check - only accept 0.5% reduction
     if (compressedFile.size < file.size * 0.995) {

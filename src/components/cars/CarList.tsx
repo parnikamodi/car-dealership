@@ -6,6 +6,7 @@ import { ref, deleteObject } from 'firebase/storage'
 import { db, storage } from '@/lib/firebase/config'
 import CarCard from './CarCard'
 import type { Car } from '@/lib/types/car'
+import { useInView } from 'react-intersection-observer';
 
 export interface CarListProps {
   isAdminPage?: boolean;
@@ -24,6 +25,8 @@ export default function CarList({ isAdminPage = false, filter = 'all' }: CarList
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  
 
   const fetchCars = useCallback(async () => {
     setLoading(true)
@@ -50,6 +53,7 @@ export default function CarList({ isAdminPage = false, filter = 'all' }: CarList
           price: data.price,
           year: data.year,
           info: data.info,
+          tel: data.tel,
           email: data.email,
           imagePath: data.imagePath,
           imagePaths: data.imagePaths,

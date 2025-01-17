@@ -18,11 +18,11 @@ const withPWA = require('next-pwa')({
       },
     },
   ],
-  buildExcludes: [/middleware-manifest\.json$/], // Add this line
-  fallbacks: {  // Add this section
-    document: '/offline'  // This requires an /app/offline/page.tsx file
+  buildExcludes: [/middleware-manifest\.json$/],
+  fallbacks: {
+    document: '/offline'
   }
-})
+});
 
 const nextConfig = {
   images: {
@@ -31,10 +31,16 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'firebasestorage.googleapis.com'
       }
-    ]
+    ],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    formats: ['image/webp'],
+    minimumCacheTTL: 60,
+    dangerouslyAllowSVG: true,
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
   reactStrictMode: true,
   poweredByHeader: false,
-}
+};
 
-module.exports = withPWA(nextConfig)
+module.exports = withPWA(nextConfig);
