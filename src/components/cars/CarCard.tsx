@@ -103,13 +103,8 @@ export default function CarCard({ car, onDelete, onUpdate, isAdminPage }: CarCar
     }
   }
 
-  return (
-    <motion.div 
-      className="bg-white rounded-xl shadow-lg overflow-hidden"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.3 }}
-    >
+  const CardContent = () => (
+    <>
       <div {...handlers} className="relative h-72 bg-gray-100">
         <AnimatePresence initial={false} mode="wait">
           <motion.div
@@ -153,13 +148,6 @@ export default function CarCard({ car, onDelete, onUpdate, isAdminPage }: CarCar
                 type="button"
               />
             ))}
-          </div>
-        )}
-
-        {typeof car.views !== 'undefined' && (
-          <div className="absolute top-4 left-4 bg-black/50 backdrop-blur-sm text-white text-sm px-3 py-1.5 rounded-full flex items-center gap-2">
-            <EyeIcon className="w-4 h-4" />
-            <span>{car.views}</span>
           </div>
         )}
 
@@ -286,31 +274,36 @@ export default function CarCard({ car, onDelete, onUpdate, isAdminPage }: CarCar
                   {formatPrice(car.price)}
                 </p>
               </div>
-              <span className={`px-2 py-1 rounded-full text-sm font-medium ${
-                car.status === 'active'
-                  ? 'bg-green-100 text-green-800'
-                  : car.status === 'pending'
-                  ? 'bg-yellow-100 text-yellow-800'
-                  : 'bg-red-100 text-red-800'
-              }`}>
-                {car.status.charAt(0).toUpperCase() + car.status.slice(1)}
-              </span>
             </div>
             
             <p className="text-gray-600 text-sm mb-4 line-clamp-2">{car.info}</p>
             
             <div className="flex justify-between items-center">
               <span className="text-gray-500 text-sm">Year: {car.year}</span>
-              <Link 
-                href={`/cars/${car.id}`}
-                className="text-amber-600 active:text-amber-700 text-sm font-medium"
-              >
-                View Details →
-              </Link>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
+    </>
+  )
+
+  return (
+    <motion.div 
+      className="bg-white rounded-xl shadow-lg overflow-hidden"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+    >
+      {isAdminPage ? (
+        <CardContent />
+      ) : (
+        <Link 
+          href={`/cars/${car.id}`}
+          className="block cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98]"
+        >
+          <CardContent />
+        </Link>
+      )}
     </motion.div>
   )
 }
