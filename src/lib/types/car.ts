@@ -5,9 +5,7 @@ export interface Car {
   price: number;
   year: number;
   info: string;
-  tel: string;
   email: string;
-  location: string; // Added location field
   imagePath?: string;
   imagePaths?: string[];
   featured: boolean;
@@ -15,8 +13,6 @@ export interface Car {
   views: number;
   posted: string;
   createdAt: string;
-  // Optional array for multiple contact numbers
-  contactNumbers?: string[];
 }
 
 export interface CarFormData {
@@ -24,6 +20,4 @@ export interface CarFormData {
   price: number;
   year: number;
   info: string;
-  tel: string;
-  location: string;
 }

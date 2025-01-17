@@ -21,7 +21,6 @@ interface FormData {
   year: number;
   info: string;
   price: number;
-  tel: string;
   featured: boolean;
 }
 
@@ -36,7 +35,6 @@ export default function CarForm() {
     year: new Date().getFullYear(),
     info: '',
     price: 0,
-    tel: '',
     featured: false
   })
 
@@ -130,7 +128,6 @@ export default function CarForm() {
         year: Number(formData.year),
         info: formData.info,
         price: Number(formData.price),
-        tel: formData.tel,
         featured: formData.featured,
         uid: user.uid,
         email: user.email,
@@ -243,18 +240,6 @@ export default function CarForm() {
             className="w-full p-2 border rounded"
             value={formData.price || ''}
             onChange={(e) => setFormData(prev => ({ ...prev, price: Number(e.target.value) }))}
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-1">Location*</label>
-          <input
-            type="text"
-            required
-            placeholder="e.g., Park Street, Kolkata"
-            className="w-full p-2 border rounded"
-            value={formData.tel}
-            onChange={(e) => setFormData(prev => ({ ...prev, tel: e.target.value }))}
           />
         </div>
 

@@ -11,6 +11,8 @@ import { useParams } from 'next/navigation'
 import { ref, getDownloadURL } from 'firebase/storage'
 import { useSwipeable } from 'react-swipeable'
 
+const CONTACT_PHONE_NUMBER = '+91 9898982222'
+
 export default function CarDetailPage() {
   const [car, setCar] = useState<Car | null>(null)
   const [error, setError] = useState<string>('')
@@ -210,12 +212,7 @@ export default function CarDetailPage() {
             <CalendarIcon className="h-5 w-5" />
             <span>{car.year}</span>
           </div>
-          {car.location && (
-            <div className="flex items-center gap-1">
-              <MapPinIcon className="h-5 w-5" />
-              <span>{formatLocation(car.location)}</span>
-            </div>
-          )}
+        
         </div>
 
         <div className="text-3xl font-bold text-amber-600">
@@ -229,13 +226,10 @@ export default function CarDetailPage() {
         <div className="pt-4 border-t">
           <h2 className="text-lg font-semibold mb-3">Contact Details</h2>
           <div className="space-y-2">
-            <a
-              href={`tel:${car.tel}`}
-              className="flex items-center gap-2 text-amber-600 hover:text-amber-700"
-            >
+            <div className="flex items-center gap-2 text-amber-600">
               <PhoneIcon className="h-5 w-5" />
-              <span>{car.tel}</span>
-            </a>
+              <span>{CONTACT_PHONE_NUMBER}</span>
+            </div>
           </div>
         </div>
       </div>

@@ -28,7 +28,6 @@ export default function CarCard({ car, onDelete, onUpdate, isAdminPage }: CarCar
     name: car.name,
     year: car.year,
     price: car.price,
-    location: car.location || '',
     info: car.info || '',
     featured: car.featured || false
   })
@@ -75,20 +74,27 @@ export default function CarCard({ car, onDelete, onUpdate, isAdminPage }: CarCar
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
+    const { name, value, type } = e.target
     setEditForm(prev => ({
       ...prev,
-      [name]: name === 'price' || name === 'year' ? Number(value) || 0 : value
+      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
     }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!onUpdate || isSubmitting) return
-
+    setIsSubmitting(true)
     try {
-      setIsSubmitting(true)
-      await onUpdate(car.id, editForm)
+      if (!onUpdate) {
+        throw new Error('onUpdate function is not defined')
+      }
+      await onUpdate(car.id, {
+        name: editForm.name,
+        year: Number(editForm.year),
+        price: Number(editForm.price),
+        info: editForm.info,
+        featured: editForm.featured
+      })
       setIsEditing(false)
     } catch (error) {
       console.error('Error updating car:', error)
@@ -240,18 +246,6 @@ export default function CarCard({ car, onDelete, onUpdate, isAdminPage }: CarCar
                     type="number"
                     name="price"
                     value={editForm.price}
-                    onChange={handleInputChange}
-                    className="w-full p-2 border rounded"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-1">Location</label>
-                  <input
-                    type="text"
-                    name="location"
-                    value={editForm.location}
                     onChange={handleInputChange}
                     className="w-full p-2 border rounded"
                     required

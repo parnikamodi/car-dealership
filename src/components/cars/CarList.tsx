@@ -50,7 +50,6 @@ export default function CarList({ isAdminPage = false, filter = 'all' }: CarList
           price: data.price,
           year: data.year,
           info: data.info,
-          tel: data.tel,
           email: data.email,
           imagePath: data.imagePath,
           imagePaths: data.imagePaths,
