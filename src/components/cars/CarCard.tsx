@@ -8,7 +8,6 @@ import type { Car } from '@/lib/types/car'
 import { TrashIcon, PencilIcon, XMarkIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline'
 import Link from 'next/link'
 import Image from 'next/image'
-import { useSwipeable } from 'react-swipeable'
 import { motion, AnimatePresence } from 'framer-motion'
 
 interface CarCardProps {
@@ -22,6 +21,7 @@ export default function CarCard({ car, onDelete, onUpdate, isAdminPage }: CarCar
   const { user } = useAuth()
   const [imgUrls, setImgUrls] = useState<string[]>([])
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
+
   const [isEditing, setIsEditing] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [editForm, setEditForm] = useState({
@@ -48,22 +48,14 @@ export default function CarCard({ car, onDelete, onUpdate, isAdminPage }: CarCar
     loadImages()
   }, [car.imagePaths])
 
-  const handlers = useSwipeable({
-    onSwipedLeft: () => {
-      if (imgUrls.length > 1) {
-        setCurrentImageIndex((prev) => (prev + 1) % imgUrls.length)
+  const navigateImage = (direction: number) => {
+    setCurrentImageIndex((prevIndex) => {
+      if (direction === 1) {
+        return prevIndex === imgUrls.length - 1 ? 0 : prevIndex + 1
       }
-    },
-    onSwipedRight: () => {
-      if (imgUrls.length > 1) {
-        setCurrentImageIndex((prev) => (prev === 0 ? imgUrls.length - 1 : prev - 1))
-      }
-    },
-    trackMouse: false,
-    preventScrollOnSwipe: true,
-    delta: 10,
-    swipeDuration: 500,
-  })
+      return prevIndex === 0 ? imgUrls.length - 1 : prevIndex - 1
+    })
+  }
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-IN', {
@@ -105,15 +97,15 @@ export default function CarCard({ car, onDelete, onUpdate, isAdminPage }: CarCar
 
   const CardContent = () => (
     <>
-      <div {...handlers} className="relative h-72 bg-gray-100 group">
-        <AnimatePresence initial={false} mode="wait">
+      <div className="relative h-72 bg-gray-100 group">
+        <AnimatePresence mode="wait">
           <motion.div
             key={currentImageIndex}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="h-full"
+            transition={{ duration: 0.3 }}
+            className="absolute w-full h-full"
           >
             {imgUrls.length > 0 ? (
               <Image
@@ -138,9 +130,9 @@ export default function CarCard({ car, onDelete, onUpdate, isAdminPage }: CarCar
             <button
               onClick={(e) => {
                 e.preventDefault()
-                setCurrentImageIndex(prev => (prev === 0 ? imgUrls.length - 1 : prev - 1))
+                navigateImage(-1)
               }}
-              className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
+              className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-all opacity-0 group-hover:opacity-100 focus:opacity-100 z-10"
               aria-label="Previous image"
             >
               <ChevronLeftIcon className="w-5 h-5" />
@@ -149,9 +141,9 @@ export default function CarCard({ car, onDelete, onUpdate, isAdminPage }: CarCar
             <button
               onClick={(e) => {
                 e.preventDefault()
-                setCurrentImageIndex(prev => (prev + 1) % imgUrls.length)
+                navigateImage(1)
               }}
-              className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
+              className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-all opacity-0 group-hover:opacity-100 focus:opacity-100 z-10"
               aria-label="Next image"
             >
               <ChevronRightIcon className="w-5 h-5" />
