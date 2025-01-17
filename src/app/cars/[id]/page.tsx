@@ -16,7 +16,7 @@ export default function CarDetailPage({ params }: { params: Promise<{ id: string
   const [imageUrls, setImageUrls] = useState<string[]>([])
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
 
-  const CONTACT_PHONE_NUMBER = process.env.NEXT_PUBLIC_CONTACT_PHONE_NUMBER || ''
+  const CONTACT_PHONE_NUMBER = '+91 9822299888'
 
   useEffect(() => {
     const fetchCar = async () => {
