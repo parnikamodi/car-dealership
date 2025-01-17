@@ -5,7 +5,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { storage } from '@/lib/firebase/config'
 import { ref, getDownloadURL } from 'firebase/storage'
 import type { Car } from '@/lib/types/car'
-import { TrashIcon, PencilIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { TrashIcon, PencilIcon, XMarkIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useSwipeable } from 'react-swipeable'
@@ -105,7 +105,7 @@ export default function CarCard({ car, onDelete, onUpdate, isAdminPage }: CarCar
 
   const CardContent = () => (
     <>
-      <div {...handlers} className="relative h-72 bg-gray-100">
+      <div {...handlers} className="relative h-72 bg-gray-100 group">
         <AnimatePresence initial={false} mode="wait">
           <motion.div
             key={currentImageIndex}
@@ -134,21 +134,48 @@ export default function CarCard({ car, onDelete, onUpdate, isAdminPage }: CarCar
         </AnimatePresence>
 
         {imgUrls.length > 1 && (
-          <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
-            {imgUrls.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setCurrentImageIndex(index)}
-                className={`w-2 h-2 rounded-full transition-opacity duration-200 ${
-                  index === currentImageIndex 
-                    ? 'bg-white' 
-                    : 'bg-white/60'
-                }`}
-                aria-label={`View image ${index + 1}`}
-                type="button"
-              />
-            ))}
-          </div>
+          <>
+            <button
+              onClick={(e) => {
+                e.preventDefault()
+                setCurrentImageIndex(prev => (prev === 0 ? imgUrls.length - 1 : prev - 1))
+              }}
+              className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
+              aria-label="Previous image"
+            >
+              <ChevronLeftIcon className="w-5 h-5" />
+            </button>
+
+            <button
+              onClick={(e) => {
+                e.preventDefault()
+                setCurrentImageIndex(prev => (prev + 1) % imgUrls.length)
+              }}
+              className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
+              aria-label="Next image"
+            >
+              <ChevronRightIcon className="w-5 h-5" />
+            </button>
+
+            <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
+              {imgUrls.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={(e) => {
+                    e.preventDefault()
+                    setCurrentImageIndex(index)
+                  }}
+                  className={`w-2 h-2 rounded-full transition-opacity duration-200 ${
+                    index === currentImageIndex 
+                      ? 'bg-white' 
+                      : 'bg-white/60'
+                  }`}
+                  aria-label={`View image ${index + 1}`}
+                  type="button"
+                />
+              ))}
+            </div>
+          </>
         )}
 
         {user && isAdminPage && (
