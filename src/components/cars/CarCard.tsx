@@ -151,10 +151,11 @@ export default function CarCard({ car, onDelete, onUpdate, isAdminPage }: CarCar
                 src={imgUrls[currentImageIndex]}
                 alt={car.name}
                 fill
-                className="object-cover"
+                className="object-contain md:object-cover"
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 priority={currentImageIndex === 0}
                 loading={currentImageIndex === 0 ? 'eager' : 'lazy'}
+                quality={85}
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-gray-400">

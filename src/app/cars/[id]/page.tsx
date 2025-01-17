@@ -26,25 +26,26 @@ const ImageModal = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-90 z-50 transition-opacity duration-300">
+    <div className="fixed inset-0 bg-black bg-opacity-90 z-[9999] transition-opacity duration-300">
+      <button 
+        onClick={onClose}
+        className="fixed top-4 right-4 z-[10000] p-4 cursor-pointer"
+        aria-label="Close modal"
+      >
+        <XMarkIcon className="w-8 h-8 text-white hover:text-gray-300 transition-colors" />
+      </button>
+
+      <button
+        onClick={() => setCurrentIndex(prev => (prev === 0 ? images.length - 1 : prev - 1))}
+        className="fixed left-2 top-1/2 -translate-y-1/2 z-[10000] bg-white/10 hover:bg-white/20 text-white p-4 rounded-full transition-all"
+        aria-label="Previous image"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-8 h-8">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+        </svg>
+      </button>
+
       <div className="absolute inset-0 flex items-center justify-center">
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors"
-        >
-          <XMarkIcon className="w-8 h-8" />
-        </button>
-
-        <button
-          onClick={() => setCurrentIndex(prev => (prev === 0 ? images.length - 1 : prev - 1))}
-          className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white p-4 rounded-full transition-all"
-          aria-label="Previous image"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-8 h-8">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-          </svg>
-        </button>
-
         <div className="relative w-full h-full max-w-6xl max-h-screen p-4">
           <div className="relative w-full h-full">
             <Image
@@ -57,16 +58,6 @@ const ImageModal = ({
             />
           </div>
         </div>
-
-        <button
-          onClick={() => setCurrentIndex(prev => (prev === images.length - 1 ? 0 : prev + 1))}
-          className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white p-4 rounded-full transition-all"
-          aria-label="Next image"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-8 h-8">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-          </svg>
-        </button>
 
         <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
           {images.map((_, index) => (
@@ -83,6 +74,16 @@ const ImageModal = ({
           ))}
         </div>
       </div>
+
+      <button
+        onClick={() => setCurrentIndex(prev => (prev === images.length - 1 ? 0 : prev + 1))}
+        className="fixed right-2 top-1/2 -translate-y-1/2 z-[10000] bg-white/10 hover:bg-white/20 text-white p-4 rounded-full transition-all"
+        aria-label="Next image"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-8 h-8">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+        </svg>
+      </button>
     </div>
   );
 };
