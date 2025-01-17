@@ -6,7 +6,6 @@ import { ref, deleteObject } from 'firebase/storage'
 import { db, storage } from '@/lib/firebase/config'
 import CarCard from './CarCard'
 import type { Car } from '@/lib/types/car'
-import { useInView } from 'react-intersection-observer';
 
 export interface CarListProps {
   isAdminPage?: boolean;
