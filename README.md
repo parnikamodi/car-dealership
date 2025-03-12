@@ -1,36 +1,27 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# NEWTON - Car dealership website
 
-## Getting Started
+In this is project, we built a full-stack interactive online marketplace for cars that supports checkout and admin functions for over 2000 cars. This app uses react for its frontend and express/node.js as its backend which interacts with our MySQL database. 
 
-First, run the development server:
+## To run the project:
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+1. Download the project directory. Ensure node and yarn are installed. 
+2. In MySQL, run the script DBAdump.sql in the sql folder to create the database
+3. Open 2 node-enabled command prompts and cd to the project directory in both
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+**yarn install is not necessary in steps 4-5 if the directories already have a 'node modules' folder**
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+4. install server dependencies: in one command prompt, cd server && yarn install
+5. install frontend dependencies: in the other prompt, cd client && yarn install
+6. Run 'yarn start' in both the server & client terminals
+7. localhost:3000 automatically opens in browser
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Key Features of the Website and it's implementation:
+1. Users can buy product. review past orders and can add mutiple cars to the cart and choose the store of choice.
+2. Users can search products & rerank products based on price
+3. Passwords are now stored as hashes in the database. Remember your password, as the database values can't be returned to plaintext once entered! Upon login, the password entered in the front-end is hashed and compared to the database value from the server.
+4. During customer registration, phone numbers and emails now are checked for the correct format. Phones: 10 digits with no delimiters, or '+' and up to 12 digit (for international numbers) email: requires a nonempty string, then the '@' symbol, and another non-empty string. 
 
-## Learn More
+## Responsibilities:
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Designed an online marketplace for luxury cars, built the Frontend and UI (User Interface) components for the website with detail pages for each car, a checkout page, and an order detail page using ReactJS, HTML, and CSS.
+2. 	Led the team developing and enhancing various backend features such as password encryption using NodeJS and MySQL.

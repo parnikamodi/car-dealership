@@ -120,7 +120,7 @@ export default function CarCard({ car, onDelete, onUpdate, isAdminPage }: CarCar
 
   const CardContent = () => (
     <>
-      <div className="relative h-72 bg-gray-100 group overflow-hidden">
+      <div className="relative h-72 bg-gray-100 group overflow-visible">
         <AnimatePresence initial={false} custom={direction} mode="wait">
           <motion.div
             key={currentImageIndex}
@@ -212,10 +212,10 @@ export default function CarCard({ car, onDelete, onUpdate, isAdminPage }: CarCar
         )}
 
         {user && isAdminPage && (
-          <div className="absolute top-4 right-4 flex gap-2">
+          <div className="absolute top-4 right-4 flex gap-2 z-20">
             <button 
               onClick={() => setIsEditing(!isEditing)}
-              className="bg-amber-500/80 backdrop-blur-sm text-white p-2 rounded-full active:bg-amber-600"
+              className="bg-amber-500/80 backdrop-blur-sm text-white p-2 rounded-full active:bg-amber-600 hover:bg-amber-600"
               aria-label={isEditing ? "Cancel editing" : "Edit car listing"}
               type="button"
             >
@@ -238,7 +238,7 @@ export default function CarCard({ car, onDelete, onUpdate, isAdminPage }: CarCar
                     }
                   }
                 }}
-                className="bg-red-500/80 backdrop-blur-sm text-white p-2 rounded-full active:bg-red-600"
+                className="bg-red-500/80 backdrop-blur-sm text-white p-2 rounded-full active:bg-red-600 hover:bg-red-600"
                 aria-label="Delete car listing"
                 type="button"
               >
