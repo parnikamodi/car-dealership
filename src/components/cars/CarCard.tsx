@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/hooks/useAuth'
-import { storage } from '@/lib/firebase/config'
-import { ref, getDownloadURL } from 'firebase/storage'
+// Remove these unused imports since loadImageUrls handles Firebase storage operations
+// import { storage } from '@/lib/firebase/config'
+// import { ref, getDownloadURL } from 'firebase/storage'
 import type { Car } from '@/lib/types/car'
 import { TrashIcon, PencilIcon, XMarkIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline'
 import Link from 'next/link'
