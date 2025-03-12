@@ -9,6 +9,7 @@ import { TrashIcon, PencilIcon, XMarkIcon, ChevronLeftIcon, ChevronRightIcon } f
 import Link from 'next/link'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
+import { loadImageUrls } from '@/utils/imageLoader';
 
 interface CarCardProps {
   car: Car;
@@ -33,20 +34,43 @@ export default function CarCard({ car, onDelete, onUpdate, isAdminPage }: CarCar
   })
 
   useEffect(() => {
-    const loadImages = async () => {
-      if (car.imagePaths && car.imagePaths.length > 0) {
-        try {
-          const urls = await Promise.all(
-            car.imagePaths.map(path => getDownloadURL(ref(storage, path)))
-          )
-          setImgUrls(urls)
-        } catch (err) {
-          console.error('Error loading images:', err)
-        }
-      }
+    if (!car.imagePaths?.length) return;
+    
+    const startTime = performance.now();
+    
+    loadImageUrls(car.imagePaths)
+      .then(({ urls, metrics }) => {
+        const totalLoadTime = performance.now() - startTime;
+        setImgUrls(urls);
+        console.log('Image Loading Performance:', {
+          totalImages: urls.length,
+          totalLoadTimeMs: totalLoadTime.toFixed(2),
+          averageTimePerImageMs: (totalLoadTime / urls.length).toFixed(2),
+          metricsFromLoader: metrics
+        });
+      })
+      .catch(err => {
+        console.error('Failed to load images:', err);
+      });
+  }, [car.imagePaths]);
+
+  useEffect(() => {
+    if (imgUrls.length > 0) {
+      const nextIndex = (currentImageIndex + 1) % imgUrls.length;
+      const img = new window.Image();
+      const startLoad = performance.now();
+      
+      img.onload = () => {
+        const loadTime = performance.now() - startLoad;
+        console.log(`Preloaded image ${nextIndex + 1}/${imgUrls.length}:`, {
+          loadTimeMs: loadTime.toFixed(2),
+          imageUrl: imgUrls[nextIndex]
+        });
+      };
+      
+      img.src = imgUrls[nextIndex];
     }
-    loadImages()
-  }, [car.imagePaths])
+  }, [currentImageIndex, imgUrls]);
 
   const slideVariants = {
     enter: (direction: number) => ({
