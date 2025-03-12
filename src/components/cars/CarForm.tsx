@@ -65,7 +65,7 @@ export default function CarForm() {
     
     try {
       const BATCH_SIZE = 3;
-      const processedFiles: { file: File; name: string; size: number; preview: string }[] = [];
+      const processedFiles: ImageUploadState[] = []; // Update type annotation
       
       for (let i = 0; i < files.length; i += BATCH_SIZE) {
         const batch = files.slice(i, i + BATCH_SIZE);
@@ -87,7 +87,9 @@ export default function CarForm() {
               file: compressed,
               name: file.name,
               size: compressed.size,
-              preview: URL.createObjectURL(compressed)
+              preview: URL.createObjectURL(compressed),
+              uploading: false, // Add the required property
+              error: undefined
             };
           })
         );
