@@ -30,7 +30,6 @@ export default function CarForm() {
   const [loading, setLoading] = useState(false)
   const [imageUploads, setImageUploads] = useState<ImageUploadState[]>([])
   const [uploadProgress, setUploadProgress] = useState(0)
-  const [imagePaths, setImagePaths] = useState<string[]>([])
   const [formData, setFormData] = useState<FormData>({
     name: '',
     year: new Date().getFullYear(),
@@ -91,38 +90,6 @@ export default function CarForm() {
 
     setImageUploads(prev => [...prev, ...compressedImages])
   }
-
-  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    try {
-      if (!event.target.files?.length) return;
-  
-      const files = event.target.files;
-      setLoading(true);
-  
-      const compressedFiles = await Promise.all(
-        Array.from(files).map(async (file) => {
-          console.log(`Original file: ${file.name}, Size: ${(file.size / 1024).toFixed(2)}KB`);
-          const compressed = await compressImage(file);
-          console.log(`Compressed file: ${compressed.name}, Size: ${(compressed.size / 1024).toFixed(2)}KB`);
-          return compressed;
-        })
-      );
-  
-      const uploadPromises = compressedFiles.map(async (file) => {
-        const path = `cars/${Date.now()}_${file.name}`;
-        const storageRef = ref(storage, path);
-        await uploadBytes(storageRef, file);
-        return path;
-      });
-  
-      const paths = await Promise.all(uploadPromises);
-      setImagePaths((prev) => [...prev, ...paths]);
-      setLoading(false);
-    } catch (error) {
-      console.error('Error uploading images:', error);
-      setLoading(false);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
