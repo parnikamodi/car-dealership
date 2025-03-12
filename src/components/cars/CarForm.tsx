@@ -14,6 +14,8 @@ interface ImageUploadState {
   preview?: string;
   uploading: boolean;
   error?: string;
+  name: string;
+  size: number;
 }
 
 interface FormData {
@@ -103,11 +105,11 @@ export default function CarForm() {
         return sizeKB < TARGET_MIN_KB || sizeKB > TARGET_MAX_KB;
       });
   
+      const warningMessage = outOfRangeFiles.map(({ file }) => 
+        `${file.name}: ${(file.size/1024).toFixed(2)}KB`
+      ).join('\n');
+  
       if (outOfRangeFiles.length > 0) {
-        const warningMessage = outOfRangeFiles.map(({ name, size }) => 
-          `${name}: ${(size/1024).toFixed(2)}KB`
-        ).join('\n');
-        
         const proceed = window.confirm(
           `Some images couldn't be compressed to the target range (50-100KB):\n\n${warningMessage}\n\nDo you want to proceed anyway?`
         );
