@@ -25,6 +25,8 @@ interface FormData {
 }
 
 export default function CarForm() {
+  const TARGET_MIN_KB = 50;  // Minimum image size in KB
+  const TARGET_MAX_KB = 200; // Maximum image size in KB
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
   const [loading, setLoading] = useState(false)
@@ -55,40 +57,75 @@ export default function CarForm() {
   }, [imageUploads])
 
   const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files?.length) return
-
-    const newFiles = Array.from(e.target.files)
-    const existingCount = imageUploads.length
-    const totalAllowed = 50
-    const remainingSlots = totalAllowed - existingCount
-
-    if (newFiles.length > remainingSlots) {
-      alert(`You can only add ${remainingSlots} more images. Maximum 50 images allowed.`)
-      return
-    }
-
-    setUploadProgress(0)
-    const totalFiles = newFiles.length
-    let processedFiles = 0
-
-    const compressedImages: ImageUploadState[] = []
+    if (!e.target.files?.length) return;
     
-    for (const file of newFiles) {
-      try {
-        const compressedFile = await compressImage(file)
-        compressedImages.push({
-          file: compressedFile,
-          preview: URL.createObjectURL(compressedFile),
-          uploading: false
-        })
-        processedFiles++
-        setUploadProgress((processedFiles / totalFiles) * 100)
-      } catch (error) {
-        console.error(`Error processing image ${file.name}:`, error)
+    setLoading(true);
+    const files = Array.from(e.target.files);
+    const totalFiles = files.length;
+    
+    try {
+      const BATCH_SIZE = 3;
+      const processedFiles: { file: File; name: string; size: number; preview: string }[] = [];
+      
+      for (let i = 0; i < files.length; i += BATCH_SIZE) {
+        const batch = files.slice(i, i + BATCH_SIZE);
+        console.log(`Processing batch ${Math.floor(i/BATCH_SIZE) + 1}/${Math.ceil(totalFiles/BATCH_SIZE)}`);
+        
+        const batchResults = await Promise.all(
+          batch.map(async (file, index) => {
+            const currentIndex = i + index + 1;
+            setUploadProgress((currentIndex / totalFiles) * 100);
+            
+            console.log(`Processing ${currentIndex}/${totalFiles}: ${file.name}`);
+            const compressed = await compressImage(file);
+            const sizeKB = compressed.size / 1024;
+            
+            // Log compression results
+            console.log(`Compressed ${file.name}: ${sizeKB.toFixed(2)}KB`);
+            
+            return {
+              file: compressed,
+              name: file.name,
+              size: compressed.size,
+              preview: URL.createObjectURL(compressed)
+            };
+          })
+        );
+        
+        processedFiles.push(...batchResults);
       }
+  
+      // Check for files outside range but don't throw error
+      const outOfRangeFiles = processedFiles.filter(({ file }) => {
+        const sizeKB = file.size / 1024;
+        return sizeKB < TARGET_MIN_KB || sizeKB > TARGET_MAX_KB;
+      });
+  
+      if (outOfRangeFiles.length > 0) {
+        const warningMessage = outOfRangeFiles.map(({ name, size }) => 
+          `${name}: ${(size/1024).toFixed(2)}KB`
+        ).join('\n');
+        
+        const proceed = window.confirm(
+          `Some images couldn't be compressed to the target range (50-100KB):\n\n${warningMessage}\n\nDo you want to proceed anyway?`
+        );
+  
+        if (!proceed) {
+          setLoading(false);
+          setUploadProgress(0);
+          return;
+        }
+      }
+  
+      setImageUploads(prev => [...prev, ...processedFiles]);
+      setUploadProgress(100);
+    } catch (error) {
+      console.error('Error processing images:', error);
+      alert('Error processing images. Please try again.');
+    } finally {
+      setLoading(false);
+      setUploadProgress(0);
     }
-
-    setImageUploads(prev => [...prev, ...compressedImages])
   }
 
   const handleSubmit = async (e: React.FormEvent) => {

@@ -1,58 +1,67 @@
 import imageCompression from 'browser-image-compression';
 
-const TARGET_MIN_SIZE = 50 * 1024; // 50KB in bytes
-const TARGET_MAX_SIZE = 100 * 1024; // 100KB in bytes
+const TARGET_MIN_KB = 50;
+const TARGET_MAX_KB = 100;
+const MAX_ATTEMPTS = 8;
 
 export async function compressImage(file: File): Promise<File> {
-  if (!file.type.startsWith('image/')) {
-    throw new Error('File must be an image');
+  try {
+    const originalSize = file.size / 1024;
+    console.log(`Starting compression for ${file.name} (${originalSize.toFixed(2)} KB)`);
+
+    // If already in range, return original
+    if (originalSize >= TARGET_MIN_KB && originalSize <= TARGET_MAX_KB) {
+      return file;
+    }
+
+    let bestResult: File = file;
+    let bestSizeDiff = Infinity;
+    let attempts = 0;
+    let quality = originalSize > TARGET_MAX_KB ? 0.7 : 0.9;
+
+    while (attempts < MAX_ATTEMPTS) {
+      const options = {
+        maxSizeMB: originalSize > TARGET_MAX_KB ? 0.1 : 0.2,
+        useWebWorker: true,
+        maxWidthOrHeight: 1920,
+        initialQuality: quality,
+        fileType: 'image/jpeg',
+        alwaysKeepResolution: true
+      };
+
+      const compressed = await imageCompression(file, options);
+      const compressedSize = compressed.size / 1024;
+      const sizeDiff = Math.abs((TARGET_MIN_KB + TARGET_MAX_KB) / 2 - compressedSize);
+
+      console.log(`Attempt ${attempts + 1}: Size=${compressedSize.toFixed(2)}KB, Quality=${quality.toFixed(2)}`);
+
+      if (compressedSize >= TARGET_MIN_KB && compressedSize <= TARGET_MAX_KB) {
+        return compressed;
+      }
+
+      // Keep track of best result
+      if (sizeDiff < bestSizeDiff) {
+        bestResult = compressed;
+        bestSizeDiff = sizeDiff;
+      }
+
+      // Adjust quality based on result
+      if (compressedSize > TARGET_MAX_KB) {
+        quality *= 0.8;
+      } else {
+        quality = Math.min(quality * 1.2, 1.0);
+      }
+
+      attempts++;
+    }
+
+    // If we couldn't get exact range, return best attempt
+    console.log(`Using best attempt for ${file.name}: ${(bestResult.size / 1024).toFixed(2)} KB`);
+    return bestResult;
+
+  } catch (error) {
+    console.error(`Error compressing ${file.name}:`, error);
+    // Return original file if compression fails
+    return file;
   }
-
-  const compressWithQuality = async (quality: number): Promise<File> => {
-    const options = {
-      maxSizeMB: TARGET_MAX_SIZE / (1024 * 1024), // Convert to MB
-      useWebWorker: true,
-      initialQuality: quality,
-      maxWidthOrHeight: 1920, // Full HD resolution
-      fileType: 'image/jpeg', // Convert all images to JPEG for better compression
-      alwaysKeepResolution: false
-    };
-
-    return await imageCompression(file, options) as File;
-  };
-
-  // Binary search for optimal quality
-  let minQuality = 0;
-  let maxQuality = 1;
-  let bestResult: File | null = null;
-  let attempts = 0;
-  const MAX_ATTEMPTS = 8; // Limit the number of attempts
-
-  while (attempts < MAX_ATTEMPTS) {
-    const quality = (minQuality + maxQuality) / 2;
-    const result = await compressWithQuality(quality);
-    
-    console.log(`Attempt ${attempts + 1}: Quality ${quality.toFixed(2)}, Size: ${result.size / 1024}KB`);
-
-    if (result.size >= TARGET_MIN_SIZE && result.size <= TARGET_MAX_SIZE) {
-      return result;
-    }
-
-    if (result.size > TARGET_MAX_SIZE) {
-      maxQuality = quality;
-    } else {
-      minQuality = quality;
-    }
-
-    // Keep the best result (closest to target range)
-    if (!bestResult || 
-        Math.abs(result.size - TARGET_MIN_SIZE) < Math.abs(bestResult.size - TARGET_MIN_SIZE)) {
-      bestResult = result;
-    }
-
-    attempts++;
-  }
-
-  // Return the best result if we couldn't hit the exact range
-  return bestResult || file;
 }
