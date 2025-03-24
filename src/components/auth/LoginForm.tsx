@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { auth } from '@/lib/firebase/config'
 import { signInWithEmailAndPassword } from 'firebase/auth'
+import { initializeNewUser } from '@/lib/firebase/userInitialization'  // Add this line
 
 export default function LoginForm() {
   const router = useRouter()
@@ -34,11 +35,16 @@ export default function LoginForm() {
     setIsLoading(true)
 
     try {
-      await signInWithEmailAndPassword(
+      // Sign in the user with Firebase
+      const userCredential = await signInWithEmailAndPassword(
         auth, 
         formData.email, 
         formData.password
       )
+      
+      // Initialize user data if needed
+      await initializeNewUser(userCredential.user)
+      
       router.push('/')
     } catch (error: unknown) {
       if (error instanceof Error) {
