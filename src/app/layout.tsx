@@ -10,13 +10,13 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Car Marketplace",
-  description: "Buy and sell cars online",
+  title: "Plus Marketing - Car Dealership",
+  description: "Plus Marketing - Your trusted partner for quality vehicles. Buy and sell cars with confidence.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Car Marketplace",
+    title: "Plus Marketing",
   },
   icons: {
     icon: [
@@ -24,6 +24,17 @@ export const metadata: Metadata = {
       { url: "/icon-512x512.png", sizes: "512x512", type: "image/png" },
     ],
     apple: [{ url: "/icon-192x192.png" }],
+  },
+  openGraph: {
+    title: 'Plus Marketing - Car Dealership',
+    description: 'Your trusted partner for quality vehicles',
+    images: [{ url: '/icon-512x512.png' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Plus Marketing - Car Dealership',
+    description: 'Your trusted partner for quality vehicles',
+    images: ['/icon-512x512.png'],
   },
 };
 
