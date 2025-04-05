@@ -1,7 +1,7 @@
 {
-  "name": "Car Marketplace",
-  "short_name": "Dealership",
-  "description": "Manage car listings with an admin panel for seamless inventory control.",
+  "name": "Plus Marketing Car Dealership",
+  "short_name": "Plus Marketing",
+  "description": "Plus Marketing - Your trusted partner for quality vehicles. Buy and sell cars with confidence.",
   "start_url": "/login",
   "display": "standalone",
   "background_color": "#ffffff",
