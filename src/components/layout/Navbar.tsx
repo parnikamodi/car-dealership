@@ -37,7 +37,7 @@ export default function Navbar(): JSX.Element {
             <div className="flex-shrink-0">
               <span className="flex items-center gap-2 text-gray-800 font-semibold">
                 <HomeIcon className="h-6 w-6" />
-                <span className="text-lg">CarMarket</span>
+                <span className="text-lg">Plus Marketing</span>
               </span>
             </div>
           </div>
@@ -58,7 +58,7 @@ export default function Navbar(): JSX.Element {
               aria-label="Home"
             >
               <HomeIcon className="h-6 w-6" />
-              <span className="text-lg">CarMarket</span>
+              <span className="text-lg">Plus Marketing</span>
             </Link>
           </div>
 
