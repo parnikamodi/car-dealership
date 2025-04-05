@@ -98,7 +98,7 @@ export default function CarDetailPage({ params }: { params: Promise<{ id: string
   const [isModalOpen, setIsModalOpen] = useState(false)
   const router = useRouter()
 
-  const CONTACT_PHONE_NUMBER = '+91 9822299888'
+  const CONTACT_PHONE_NUMBER = '+91 9742332168'
 
   useEffect(() => {
     const fetchCar = async () => {
